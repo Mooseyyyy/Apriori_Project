@@ -1,9 +1,5 @@
-#include <iostream>
+#include "Item.h"
 
-using namespace std;
-
-int main() {
-    cout << "Hello World" << endl;
-
-    return 0;
+Item::Item(int num) {
+    Item.name = "i" + std::to_string(num);
 }
