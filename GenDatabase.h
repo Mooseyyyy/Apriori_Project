@@ -1,5 +1,5 @@
-#include "Item.h"
 #include <vector>
+#include <string>
 
 class Database {
 public:
@@ -10,4 +10,13 @@ public:
 class Transaction {
     Transaction();
     GenTransaction(int items);
+};
+
+class Item {
+public:
+    Item() {}
+
+    Item(int num) {}
+
+    std::string name;
 };

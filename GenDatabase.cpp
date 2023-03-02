@@ -8,6 +8,10 @@ populateVector() {
 
 GenTransaction(int num) {}
 
+Item::Item(int num) {
+    Item.name = "i" + std::to_string(num);
+}
+
 int main() {
   std::vector<Item> items;
   populateVector();
