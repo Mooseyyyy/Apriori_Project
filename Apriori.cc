@@ -14,7 +14,12 @@ public:
     std::ofstream database;
 };
 
-void test(Database &db, float ms) {
+class itemsets {
+public:
+    itemsets();
+};
+
+itemsets apriori(Database &db, float ms) {
     std::string fileCompare, loopCompare;
     while (db.database) {
         std::cout << fileCompare << " ";
@@ -26,7 +31,7 @@ int main() {
     float i = 1.0;
     db.openDatabase1K();
 
-    test(db, i);
+    apriori(db, i);
 
     return 0;
 }
