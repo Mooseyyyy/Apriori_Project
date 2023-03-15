@@ -6,17 +6,17 @@
 class Database {
 public:
     Database();
-    openDatbase1K() {
-        database.open("Database1K.txt")
+    void openDatabase1K() {
+        database.open("Database1K.txt");
     }
 
     std::vector<std::string> transactions;
     std::ofstream database;
 };
 
-void test(Datbase db, float ms) {
+void test(Database &db, float ms) {
     std::string fileCompare, loopCompare;
-    while (db.database >> fileCompare) {
+    while (db.database) {
         std::cout << fileCompare << " ";
     }
 }
@@ -24,7 +24,7 @@ void test(Datbase db, float ms) {
 int main() {
     Database db;
     float i = 1.0;
-    db.openDatbase1K();
+    db.openDatabase1K();
 
     test(db, i);
 

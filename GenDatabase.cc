@@ -74,7 +74,6 @@ void GenDatabase100K (std::vector<std::string>& items) {
 
 int main() {
   std::vector<std::string> items;
-  int i;
 
   //Create vector of "items"
   populateVector(items);
