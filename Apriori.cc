@@ -4,23 +4,28 @@
 #include <iostream>
 
 class Database {
+private:
+    ifstream fin;
 public:
     Database();
     void openDatabase(std::string dbf) {
-        
-        
-std::string line;
-        std::ifstream database;
-        database.open(dbf);
-        if (database.is_open()) {
-            while (getline(database, line)) {
-                std::cout << line << '\n';
-            }
-        database.close();
-        } else std::cout << "Unable to open file";
+        fin.open(dbf);
+        if(!fin) {
+            std::cout << "File can not be opened" << std::endl;
+            exit(0);
+        }
+        TakeIn();
     }
 
-    std::vector<std::string> transactions;
+    void TakeIn() {
+        std::string temp;
+        while (std::cin >> temp && temp != "#") {
+            transactions.push_back(s);
+        }
+
+    }
+
+    std::vector<std::vector<std::string>> transactions;
     
 };
 
@@ -38,7 +43,7 @@ itemsets apriori(Database &db, float ms) {
 
 int main() {
     Database db;
-    float i = 1.0;
+    float i = 0.1;
     db.openDatabase("Database1K.txt");
 
     apriori(db, i);
