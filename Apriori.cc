@@ -1,11 +1,10 @@
 #include <string>
+#include <sstream>
 #include <fstream>
 #include <vector>
 #include <iostream>
 
 class Database {
-private:
-    ifstream fin;
 public:
     Database();
     void openDatabase(std::string dbf) {
@@ -18,14 +17,32 @@ public:
     }
 
     void TakeIn() {
-        std::string temp;
-        while (std::cin >> temp && temp != "#") {
-            transactions.push_back(s);
+        //Using sstream for contents copy
+        std::string line, var;
+        std::stringstream sline;
+        std::vector<std::string> arr;
+        while(std::getline(fin, temp)) {
+           if (fin) {
+            //COnvert the fstream to sstream
+            sline << fin.rdbuf();
+           }
+           sline.str(temp);
+           while (std::getline(sline, var, '')) {
+            //Push each item into our vector of this transaction
+            arr.push_back(var);
+           }
+           //Push the transaction into the vector
+           transactions.push_back(arr);
+           //Clear individual items from array to get next transaction
+           arr.clear();
+           sline.clear();
+        }
         }
 
-    }
-
+    // Outside vector contains the transactions,
+    //Inner contains each item/
     std::vector<std::vector<std::string>> transactions;
+    std::ifstream fin;
     
 };
 
