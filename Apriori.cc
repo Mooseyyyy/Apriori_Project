@@ -3,6 +3,9 @@
 #include <fstream>
 #include <vector>
 #include <iostream>
+#include <algorithm>
+#include <utility>
+#include <tuple>
 
 class Database {
 public:
@@ -43,13 +46,15 @@ public:
     //Inner contains each item/
     std::vector<std::vector<std::string>> transactions;
     std::ifstream fin;
+    int parse = 1;
 
 };
 
 class itemsets {
 private:
-  std::vector<std::vector<std::string>> C, L;
   int calSup;
+  //Control is there are frequent itemsets
+  bool cont;
 public:
     itemsets() {}
     std::vector<std::vector<std::string>> generateL() {
@@ -57,22 +62,44 @@ public:
       return returned;
     }
 
-/*
+
     int getSupport(Database &db) {
-      int ret;
-      for(auto&row:db.transactions) {
-        int i, j;
-        if(row.size() < item.size()) continue;
-        for
+      if (db.parse == 1) {
+          return calSup * db.transactions.size();
       }
-      return calSup * db.transactions.size();
     }
-    */
+
+    std::vector<std::string> getElements(Database &db) {
+      std::vector<std::string> elements;
+      for(int i = 0; i < db.transactions.size(); i++) {
+        elements.push_back(db.transactions[i][i]);
+      }
+      return elements;
+    }
+
+    std::vector<std::tuple<std::string, int>> generateC(Database &db, int support) {
+      std::vector<std::tuple<std::string, int>> candidate;
+      std::vector<std::string> elements = getElements(db);
+      if (db.parse == 1) {
+        for (int i = 0; i<elements.size(); i++) {
+          int cnt = count(elements.begin(), elements.end(), elements.at(i));
+          if(cnt>=support) {
+            std::tuple <std::string, int> freq = make_tuple(elements.at(i), cnt);
+            candidate.push_back(freq);
+          }
+      }
+      return candidate;
+    }
+      //Will need to return joined C list
+    }
 
     void apriori(Database &db, float ms) {
         calSup = ms;
-        // getSupport(db);
+        int support;
+        while (cont) {
+        support = getSupport(db);
         itemsets test;
+      }
     }
 };
 
