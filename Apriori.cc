@@ -6,7 +6,7 @@
 
 class Database {
 public:
-    Database();
+    Database() {}
     void openDatabase(std::string dbf) {
         fin.open(dbf);
         if(!fin) {
@@ -21,13 +21,13 @@ public:
         std::string line, var;
         std::stringstream sline;
         std::vector<std::string> arr;
-        while(std::getline(fin, temp)) {
+        while(std::getline(fin, line)) {
            if (fin) {
             //COnvert the fstream to sstream
             sline << fin.rdbuf();
            }
-           sline.str(temp);
-           while (std::getline(sline, var, '')) {
+           sline.str(line);
+           while (std::getline(sline, var, ' ')) {
             //Push each item into our vector of this transaction
             arr.push_back(var);
            }
@@ -43,29 +43,54 @@ public:
     //Inner contains each item/
     std::vector<std::vector<std::string>> transactions;
     std::ifstream fin;
-    
+
 };
 
 class itemsets {
+private:
+  std::vector<std::vector<std::string>> C, L;
+  int calSup;
 public:
-    itemsets();
+    itemsets() {}
+    std::vector<std::vector<std::string>> generateL() {
+      std::vector<std::vector<std::string>> returned;
+      return returned;
+    }
+
+/*
+    int getSupport(Database &db) {
+      int ret;
+      for(auto&row:db.transactions) {
+        int i, j;
+        if(row.size() < item.size()) continue;
+        for
+      }
+      return calSup * db.transactions.size();
+    }
+    */
+
+    void apriori(Database &db, float ms) {
+        calSup = ms;
+        // getSupport(db);
+        itemsets test;
+    }
 };
 
-itemsets apriori(Database &db, float ms) {
-    std::string fileCompare, loopCompare;
-    for (int i = 0; i < db.transactions.size(); i++) {
-        
-    }
-}
+
 
 int main() {
-    Database db;
+    Database db1, db10, db50, db100;
+    itemsets temp;
     float i = 0.1;
-    db.openDatabase("Database1K.txt");
+    db1.openDatabase("Database1K.txt");
+    db10.openDatabase("Database10K.txt");
+    db50.openDatabase("Database50K.txt");
+    db100.openDatabase("Database100K.txt");
 
-    apriori(db, i);
+    temp.apriori(db1, i);
+    temp.apriori(db10, i);
+    temp.apriori(db50, i);
+    temp.apriori(db100, i);
 
     return 0;
 }
-
-// test
