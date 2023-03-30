@@ -70,6 +70,14 @@ string sortItems(string items)
   return sorted;
 }
 
+// gets all unique items from a vector of strings
+// takes a vector of strings
+/*returns vector of strings like this:
+i13
+i27
+...
+i90
+*/
 vector<string> getUniqueItems(vector<string> frequent_itemsets)
 {
   // create itemset map
@@ -109,7 +117,7 @@ vector<string> getUniqueItems(vector<string> frequent_itemsets)
 }
 
 // takes database vector of strings and returns frequent
-// 1-itemsets as a map of item string and count int
+// 1-itemsets as a vector strings
 /* returns map like this:
 i10 111
 i11 120
@@ -255,8 +263,9 @@ vector<string> genFreqKByPrune(vector<string> db, vector<string> candidate_items
       }
       if (founditemset)
       {
-        // place item in map if not already in map
-        // if item already in map, increment frequency integer
+        // cout << candidate << " found in: " << transaction << endl;
+        //  place item in map if not already in map
+        //  if item already in map, increment frequency integer
         if (!frequent_itemsets.emplace(candidate, 1).second)
         {
           frequent_itemsets[candidate]++;
@@ -303,7 +312,7 @@ int main()
 {
   vector<string> db1 = openDatabase("Database1K.txt");
   apriori(db1, 0.1);
-  vector<string> test = {"i1 i2 i3 i4 i5 i6", "i2 i3 i4 i5 i6 i7", "i1 i4 i5 i8", "i1 i4 i6 i9 i10", "i2 i4 i5 i10 i11"};
-  apriori(test, 0.6);
+  // vector<string> test = {"i1 i2 i3 i4 i5 i6", "i2 i3 i4 i5 i6 i7", "i1 i4 i5 i8", "i1 i4 i6 i9 i10", "i2 i4 i5 i10 i11"};
+  // apriori(test, 0.6);
   return 0;
 }

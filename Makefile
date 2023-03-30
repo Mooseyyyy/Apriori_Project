@@ -6,6 +6,7 @@ all : GenDatabase apriori idea1
 database : GenDatabase.o
 	$(CCC) $(CCCFLAGS) $^ -o $@
 apriori : Apriori.o
+	$(CCC) $(CCCFLAGS) $^ -o $@
 idea1 : Idea1.cc
 	$(CCC) $(CCCFLAGS) $^ -o $@
 
