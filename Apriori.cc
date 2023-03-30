@@ -5,6 +5,7 @@
 #include <map>
 #include <iostream>
 #include <algorithm>
+#include <regex>
 
 using namespace std;
 
@@ -118,11 +119,11 @@ vector<string> getUniqueItems(vector<string> frequent_itemsets)
 
 // takes database vector of strings and returns frequent
 // 1-itemsets as a vector strings
-/* returns map like this:
-i10 111
-i11 120
+/* returns a vector like this:
+i10
+i11
 ...
-i99 133
+i99
  */
 vector<string> genFreq1(vector<string> db, float ms)
 {
@@ -171,6 +172,7 @@ vector<string> genFreq1(vector<string> db, float ms)
     cout << it->first << " | " << it->second << endl;
     L1.push_back(it->first);
   }
+  cout << "Scanned DB 1 time" << endl;
   return L1;
 };
 
@@ -182,13 +184,12 @@ i61 i91 i95
 ...
 i99 i22 i33
 */
-vector<string> genCandidatesByJoin(vector<string> frequent_itemsets)
+vector<string> genCandidatesByJoin(vector<string> frequent_itemsets, int k)
 {
   // create candidate vectors
   vector<string> candidate_itemsets;
 
-  // use freq-1 function with 0 support to get all
-  // unique items in frequent_itemsets
+  // get unique items in frequent_itemsets
   vector<string> unique_items = getUniqueItems(frequent_itemsets);
 
   // iterate through frequent itemsets
@@ -198,7 +199,18 @@ vector<string> genCandidatesByJoin(vector<string> frequent_itemsets)
     for (auto &item : unique_items)
     {
       // if unique item is not in string, find() will return string::npos
+      /*
       if (itemset.find(item) == string::npos)
+      {
+        // create candidate and add to candidate_itemsets
+        // duplicates in different order will exist
+        string candidate = itemset + " " + item;
+        candidate_itemsets.push_back(candidate);
+      }
+      */
+
+      regex findExact("\\b" + item + "\\b");
+      if (!regex_search(itemset, findExact))
       {
         // create candidate and add to candidate_itemsets
         // duplicates in different order will exist
@@ -221,13 +233,11 @@ vector<string> genCandidatesByJoin(vector<string> frequent_itemsets)
   candidate_itemsets.erase(it, candidate_itemsets.end());
 
   // display candidate itemsets
-  /*
-  cout << "Candidate k-itemsets: " << endl;
+  cout << "Candidate " << k << "-itemsets: " << endl;
   for (auto &itemset : candidate_itemsets)
   {
     cout << itemset << endl;
   }
-  */
   return candidate_itemsets;
 }
 
@@ -238,9 +248,15 @@ vector<string> genFreqKByPrune(vector<string> db, vector<string> candidate_items
   // create itemset map
   map<string, int> frequent_itemsets;
 
+  // Debugging SCHTUFF
+  int regChecks = 1;
+  int canChecks = 1;
+  int traChecks = 1;
+
   // iterate through vector of strings
   for (auto &transaction : db)
   {
+    traChecks++;
     // iterate through candidate itemsets
     for (auto &candidate : candidate_itemsets)
     {
@@ -251,13 +267,23 @@ vector<string> genFreqKByPrune(vector<string> db, vector<string> candidate_items
       string item;
       //  iterate through string
       //  item is the current iXX value in the candidate
+      canChecks++;
       while (iss >> item)
       {
+
         // if item is not in string, find() will return string::npos
         // if this if statement never holds true
         // then all stream items in the candidate string must be in itemset
+        /*
         if (transaction.find(item) == string::npos)
         {
+          founditemset = false;
+        }
+        */
+        regex findExact("\\b" + item + "\\b");
+        if (!regex_search(transaction, findExact))
+        {
+          regChecks++;
           founditemset = false;
         }
       }
@@ -273,7 +299,9 @@ vector<string> genFreqKByPrune(vector<string> db, vector<string> candidate_items
       }
     }
   }
-
+  cout << "Transaction Checks " << canChecks << endl;
+  cout << "Candidate Checks " << canChecks << endl;
+  cout << "Regex Checks " << regChecks << endl;
   // culls itemsets that do not meet the minimum support
   for (auto it = frequent_itemsets.cbegin(); it != frequent_itemsets.cend(); ++it)
   {
@@ -286,12 +314,13 @@ vector<string> genFreqKByPrune(vector<string> db, vector<string> candidate_items
   // display frequent k-itemsets
   // load frequent k-itemsets into vector to return
   vector<string> Lk;
-  cout << "Frequent " << k << "-itemsets" << endl;
+  cout << "Frequent " << k << "-itemsets:" << endl;
   for (auto it = frequent_itemsets.cbegin(); it != frequent_itemsets.cend(); ++it)
   {
     cout << it->first << " | " << it->second << endl;
     Lk.push_back(it->first);
   }
+  cout << "Scanned DB " << k << " times" << endl;
   return Lk;
 }
 
@@ -303,7 +332,8 @@ void apriori(vector<string> db, float ms)
   while (!Lk.empty())
   {
     k++;
-    vector<string> Ck = genCandidatesByJoin(Lk);
+    vector<string> Ck = genCandidatesByJoin(Lk, k);
+    Lk.clear();
     Lk = genFreqKByPrune(db, Ck, ms, k);
   }
 }
@@ -311,8 +341,12 @@ void apriori(vector<string> db, float ms)
 int main()
 {
   vector<string> db1 = openDatabase("Database1K.txt");
+  // vector<string> Lk = genFreq1(db1, 0.1);
+  // genCandidatesByJoin(Lk, 2);
   apriori(db1, 0.1);
-  // vector<string> test = {"i1 i2 i3 i4 i5 i6", "i2 i3 i4 i5 i6 i7", "i1 i4 i5 i8", "i1 i4 i6 i9 i10", "i2 i4 i5 i10 i11"};
-  // apriori(test, 0.6);
+  //  vector<string> test = {"i1 i2 i3 i4 i5 i6", "i2 i3 i4 i5 i6 i7", "i1 i4 i5 i8", "i1 i4 i6 i9 i10", "i2 i4 i5 i10 i11"};
+  //  vector<string> Lk = genFreq1(test, 0.6);
+  //  genCandidatesByJoin(Lk);
+  //  apriori(test, 0.6);
   return 0;
 }
