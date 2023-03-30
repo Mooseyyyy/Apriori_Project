@@ -2,10 +2,11 @@
 CCC= g++
 CCCFLAGS = -Wall -std=c++11
 
-all : database apriori
+all : GenDatabase apriori idea1
 database : GenDatabase.o
 	$(CCC) $(CCCFLAGS) $^ -o $@
 apriori : Apriori.o
+idea1 : Idea1.cc
 	$(CCC) $(CCCFLAGS) $^ -o $@
 
 # default rule for compiling .cc to .o
