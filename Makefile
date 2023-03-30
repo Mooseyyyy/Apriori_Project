@@ -4,6 +4,7 @@ CCCFLAGS = -Wall -std=c++11
 
 all : database apriori
 database : GenDatabase.o
+	$(CCC) $(CCCFLAGS) $^ -o $@
 apriori : Apriori.o
 	$(CCC) $(CCCFLAGS) $^ -o $@
 
@@ -13,6 +14,7 @@ apriori : Apriori.o
 
 clean:
 	rm -f *.o *~ *% *# .#*
-
+clean-apriori:
+	rm -f apriori Apriori.o
 clean-all: clean
-	rm -f database apriori
+	rm -f database apriori *K.txt
