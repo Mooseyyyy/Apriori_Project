@@ -185,8 +185,10 @@ vector<string> genFreq1(vector<string> db, float ms, ofstream &outFile)
       L1.push_back(itemsets[i].first);
     }
   }
+  outFile << endl;
   cout << "Scanned DB 1 time" << endl;
   outFile << "Scanned DB 1 time" << endl;
+  outFile << endl;
   return L1;
 };
 
@@ -290,12 +292,13 @@ vector<string> genFreqKByPrune(vector<string> db, vector<string> candidate_items
       while (iss >> item)
       {
         // if item is not in string
-        // if this if statement never holds true
+        // if this if statement never evaluates true
         // then all stream items in the candidate string must be in itemset
         regex findExact("\\b" + item + "\\b");
         if (!regex_search(transaction, findExact))
         {
           founditemset = false;
+          break;
         }
       }
       if (founditemset)
@@ -344,8 +347,10 @@ vector<string> genFreqKByPrune(vector<string> db, vector<string> candidate_items
       Lk.push_back(itemsets[i].first);
     }
   }
+  outFile << endl;
   cout << "Scanned DB " << k << " times" << endl;
   outFile << "Scanned DB " << k << " times" << endl;
+  outFile << endl;
   return Lk;
 }
 
@@ -379,11 +384,11 @@ int main()
   time(&start);
   ios_base::sync_with_stdio(false);
 
-  // vector<string> db1 = openDatabase("Database1K.txt");
-  // apriori(db1, 0.01);
+  vector<string> db1 = openDatabase("Database1K.txt");
+  apriori(db1, 0.01);
 
-  vector<string> test = {"i1 i2 i3 i4 i5 i6", "i2 i3 i4 i5 i6 i7", "i1 i4 i5 i8", "i1 i4 i6 i9 i10", "i2 i4 i5 i10 i11"};
-  apriori(test, 0.6);
+  // vector<string> test = {"i1 i2 i3 i4 i5 i6", "i2 i3 i4 i5 i6 i7", "i1 i4 i5 i8", "i1 i4 i6 i9 i10", "i2 i4 i5 i10 i11"};
+  // apriori(test, 0.6);
 
   /*
   int main(int argc, char *argv[]) {
