@@ -126,7 +126,7 @@ i11
 ...
 i99
  */
-vector<string> genFreq1(vector<string> db, float ms)
+vector<string> genFreq1(vector<string> db, float ms, ofstream &outFile)
 {
   int support = ms * db.size();
   cout << "Support: " << support << endl;
@@ -171,19 +171,22 @@ vector<string> genFreq1(vector<string> db, float ms)
   }
 
   // culls itemsets that do not meet the minimum support
-  // displays frequent 1-itemsets
+  // displays frequent 1-itemsets and outputs to a file
   // loads frequent 1-itemsets into vector to return
   vector<string> L1;
   cout << "Frequent 1-itemsets: " << endl;
+  outFile << "Frequent 1-itemsets: " << endl;
   for (int i = 0; i < itemsets.size(); i++)
   {
     if (itemsets[i].second >= support)
     {
       cout << itemsets[i].first << " | " << itemsets[i].second << endl;
+      outFile << itemsets[i].first << " | " << itemsets[i].second << endl;
       L1.push_back(itemsets[i].first);
     }
   }
   cout << "Scanned DB 1 time" << endl;
+  outFile << "Scanned DB 1 time" << endl;
   return L1;
 };
 
@@ -262,7 +265,7 @@ i61 i91 i95
 ...
 i99 i22 i33
 */
-vector<string> genFreqKByPrune(vector<string> db, vector<string> candidate_itemsets, float ms, int k)
+vector<string> genFreqKByPrune(vector<string> db, vector<string> candidate_itemsets, float ms, int k, ofstream &outFile)
 {
   int support = ms * db.size();
   cout << "Support: " << support << endl;
@@ -327,33 +330,46 @@ vector<string> genFreqKByPrune(vector<string> db, vector<string> candidate_items
   }
 
   // culls itemsets that do not meet the minimum support
-  // displays frequent k-itemsets
+  // displays frequent k-itemsets and outputs to a file
   // loads frequent k-itemsets into vector to return
   vector<string> Lk;
   cout << "Frequent " << k << "-itemsets:" << endl;
+  outFile << "Frequent " << k << "-itemsets:" << endl;
   for (int i = 0; i < itemsets.size(); i++)
   {
     if (itemsets[i].second >= support)
     {
       cout << itemsets[i].first << " | " << itemsets[i].second << endl;
+      outFile << itemsets[i].first << " | " << itemsets[i].second << endl;
       Lk.push_back(itemsets[i].first);
     }
   }
   cout << "Scanned DB " << k << " times" << endl;
+  outFile << "Scanned DB " << k << " times" << endl;
   return Lk;
 }
 
 void apriori(vector<string> db, float ms)
 {
+  // initialize file
+  string fileSize = to_string(db.size() / 1000);
+  ofstream outFile;
+  string fileName = "D" + fileSize + "K_Apriori_1.freq";
+  outFile.open(fileName);
+  outFile << "Apriori D" << fileSize << "K" << endl;
+  outFile << endl;
+
   // get frequent 1-itemsets
-  vector<string> Lk = genFreq1(db, ms);
+  vector<string> Lk = genFreq1(db, ms, outFile);
   int k = 1;
   while (!Lk.empty())
   {
     k++;
     vector<string> Ck = genCandidatesByJoin(Lk, k);
-    Lk = genFreqKByPrune(db, Ck, ms, k);
+    Lk = genFreqKByPrune(db, Ck, ms, k, outFile);
   }
+
+  outFile.close();
 }
 
 int main()
@@ -363,14 +379,11 @@ int main()
   time(&start);
   ios_base::sync_with_stdio(false);
 
-  vector<string> db1 = openDatabase("Database1K.txt");
-  //   vector<string> Lk = genFreq1(db1, 0.145);
-  //   genCandidatesByJoin(Lk, 2);
-  apriori(db1, 0.01);
-  // vector<string> test = {"i1 i2 i3 i4 i5 i6", "i2 i3 i4 i5 i6 i7", "i1 i4 i5 i8", "i1 i4 i6 i9 i10", "i2 i4 i5 i10 i11"};
-  //    vector<string> Lk = genFreq1(test, 0.6);
-  //    genCandidatesByJoin(Lk);
-  // apriori(test, 0.6);
+  // vector<string> db1 = openDatabase("Database1K.txt");
+  // apriori(db1, 0.01);
+
+  vector<string> test = {"i1 i2 i3 i4 i5 i6", "i2 i3 i4 i5 i6 i7", "i1 i4 i5 i8", "i1 i4 i6 i9 i10", "i2 i4 i5 i10 i11"};
+  apriori(test, 0.6);
 
   /*
   int main(int argc, char *argv[]) {
