@@ -4497,3 +4497,5 @@ Frequent 4-itemsets:
 
 Scanned DB 4 times
 
+The frequent itemsets are stored in D1K_Apriori_01.freq, under ms = 0.01.
+The time spent is 5208s, to get the frequent itemsets. 

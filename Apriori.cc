@@ -6,7 +6,6 @@
 #include <iostream>
 #include <algorithm>
 #include <regex>
-#include <bits/stdc++.h>
 
 using namespace std;
 
