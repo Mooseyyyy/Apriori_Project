@@ -131,7 +131,7 @@ vector<string> genFreq1(vector<string> db, float ms)
   cout << "Support: " << support << endl;
 
   // create itemset map
-  map<string, int> itemsets;
+  vector<pair<string, int>> itemsets;
 
   // iterate through vector of strings
   for (auto &transaction : db)
@@ -145,37 +145,42 @@ vector<string> genFreq1(vector<string> db, float ms)
     //  item is the current iXX value in the transaction
     while (iss >> item)
     {
-      // place item in map if not already in map
+      // if item not already in map, place in map
       // if item already in map, increment frequency integer
-      if (!itemsets.emplace(item, 1).second)
+      int indexInMap = -1;
+      for (int i = 0; i < itemsets.size(); i++)
       {
-        itemsets[item]++;
+        if (itemsets[i].first == item)
+        {
+          indexInMap = i;
+        }
+      }
+      if (indexInMap == -1)
+      {
+        pair<string, int> newItem;
+        newItem.first = item;
+        newItem.second = 1;
+        itemsets.push_back(newItem);
+      }
+      else
+      {
+        itemsets[indexInMap].second++;
       }
     }
   }
 
-  //  culls itemsets that do not meet the minimum support
-  auto it = itemsets.begin();
-  while (it != itemsets.end())
-  {
-    if (it->second < support)
-    {
-      itemsets.erase(it);
-    }
-    else
-    {
-      it++;
-    }
-  }
-
-  // display frequent 1-itemsets
-  // load frequent 1-itemsets into vector to return
+  // culls itemsets that do not meet the minimum support
+  // displays frequent 1-itemsets
+  // loads frequent 1-itemsets into vector to return
   vector<string> L1;
   cout << "Frequent 1-itemsets: " << endl;
-  for (auto it = itemsets.begin(); it != itemsets.end(); ++it)
+  for (int i = 0; i < itemsets.size(); i++)
   {
-    cout << it->first << " | " << it->second << endl;
-    L1.push_back(it->first);
+    if (itemsets[i].second > support)
+    {
+      cout << itemsets[i].first << " | " << itemsets[i].second << endl;
+      L1.push_back(itemsets[i].first);
+    }
   }
   cout << "Scanned DB 1 time" << endl;
   return L1;
@@ -238,13 +243,13 @@ vector<string> genCandidatesByJoin(vector<string> frequent_itemsets, int k)
   candidate_itemsets.erase(it, candidate_itemsets.end());
 
   // display candidate itemsets
-  /*
+
   cout << "Candidate " << k << "-itemsets: " << endl;
   for (auto &itemset : candidate_itemsets)
   {
     cout << itemset << endl;
   }
-  */
+
   return candidate_itemsets;
 }
 
@@ -259,14 +264,10 @@ i99 i22 i33
 vector<string> genFreqKByPrune(vector<string> db, vector<string> candidate_itemsets, float ms, int k)
 {
   int support = ms * db.size();
+  cout << "Support: " << support << endl;
 
   // create itemset map
-  map<string, int> frequent_itemsets;
-
-  // Counting operations
-  int regChecks = 1;
-  int canChecks = 1;
-  int traChecks = 1;
+  vector<pair<string, int>> itemsets;
 
   // iterate through vector of strings
   for (auto &transaction : db)
@@ -283,71 +284,55 @@ vector<string> genFreqKByPrune(vector<string> db, vector<string> candidate_items
       //  item is the current iXX value in the candidate
       while (iss >> item)
       {
-
-        // if item is not in string, find() will return string::npos
+        // if item is not in string
         // if this if statement never holds true
         // then all stream items in the candidate string must be in itemset
-        /*
-        if (transaction.find(item) == string::npos)
-        {
-          founditemset = false;
-        }
-        */
         regex findExact("\\b" + item + "\\b");
         if (!regex_search(transaction, findExact))
         {
           founditemset = false;
         }
-        regChecks++;
       }
       if (founditemset)
       {
         // cout << candidate << " found in: " << transaction << endl;
-        //  place item in map if not already in map
-        //  if item already in map, increment frequency integer
-        if (!frequent_itemsets.emplace(candidate, 1).second)
+        // if item not already in map, place in map
+        // if item already in map, increment frequency integer
+        int indexInMap = -1;
+        for (int i = 0; i < itemsets.size(); i++)
         {
-          frequent_itemsets[candidate]++;
+          if (itemsets[i].first == candidate)
+          {
+            indexInMap = i;
+          }
+        }
+        if (indexInMap == -1)
+        {
+          pair<string, int> newItem;
+          newItem.first = candidate;
+          newItem.second = 1;
+          itemsets.push_back(newItem);
+        }
+        else
+        {
+          itemsets[indexInMap].second++;
         }
       }
-      canChecks++;
     }
-    traChecks++;
-  }
-  cout << "Transaction Checks " << canChecks << endl;
-  cout << "Candidate Checks " << canChecks << endl;
-  cout << "Regex Checks " << regChecks << endl;
-
-  cout << "Frequent " << k << "-itemsets Pre Cull:" << endl;
-  for (auto it = frequent_itemsets.begin(); it != frequent_itemsets.end(); ++it)
-  {
-    cout << it->first << " | " << it->second << endl;
   }
 
-  //  culls itemsets that do not meet the minimum support
-  auto it = frequent_itemsets.begin();
-  while (it != frequent_itemsets.end())
-  {
-    cout << "Pre Cull Check: " << it->first << " | " << it->second << endl;
-    if (it->second < support)
-    {
-      frequent_itemsets.erase(it);
-    }
-    else
-    {
-      it++;
-    }
-    cout << "Post Cull Check: " << it->first << " | " << it->second << endl;
-  }
-
-  // display frequent k-itemsets
-  // load frequent k-itemsets into vector to return
+  // culls itemsets that do not meet the minimum support
+  // displays frequent k-itemsets
+  // loads frequent k-itemsets into vector to return
   vector<string> Lk;
   cout << "Frequent " << k << "-itemsets:" << endl;
-  for (auto it = frequent_itemsets.begin(); it != frequent_itemsets.end(); ++it)
+  for (int i = 0; i < itemsets.size(); i++)
   {
-    cout << it->first << " | " << it->second << endl;
-    Lk.push_back(it->first);
+    if (itemsets[i].second > support)
+    {
+      cout << itemsets[i].first << " | " << itemsets[i].second << endl;
+      Lk.push_back(itemsets[i].first);
+    }
   }
   cout << "Scanned DB " << k << " times" << endl;
   return Lk;
@@ -362,7 +347,6 @@ void apriori(vector<string> db, float ms)
   {
     k++;
     vector<string> Ck = genCandidatesByJoin(Lk, k);
-    Lk.clear();
     Lk = genFreqKByPrune(db, Ck, ms, k);
   }
 }
@@ -370,7 +354,7 @@ void apriori(vector<string> db, float ms)
 int main()
 {
   vector<string> db1 = openDatabase("Database1K.txt");
-  // vector<string> Lk = genFreq1(db1, 0.1);
+  // vector<string> Lk = genFreq1(db1, 0.145);
   // genCandidatesByJoin(Lk, 2);
   apriori(db1, 0.1);
   //  vector<string> test = {"i1 i2 i3 i4 i5 i6", "i2 i3 i4 i5 i6 i7", "i1 i4 i5 i8", "i1 i4 i6 i9 i10", "i2 i4 i5 i10 i11"};
@@ -378,35 +362,35 @@ int main()
   //  genCandidatesByJoin(Lk);
   //  apriori(test, 0.6);
 
-/*
-int main(int argc, char *argv[]) {
-  switch (argc) {
-    case 1:
-      //If only executeable name is given
-      cout << "Missing additional arguments" << endl;
-      break;
-    case 2:
-      //If only exe name 1 value given
-      cout << "Missing additional arguments" << endl;
-      break;
-    default:
-      //Take name of database using
-      std::string database_name = argv[1];
-      float min_support = argv[2];
-      vector<string> db1 = openDatabase(database_name);
-      itemsets temp;
+  /*
+  int main(int argc, char *argv[]) {
+    switch (argc) {
+      case 1:
+        //If only executeable name is given
+        cout << "Missing additional arguments" << endl;
+        break;
+      case 2:
+        //If only exe name 1 value given
+        cout << "Missing additional arguments" << endl;
+        break;
+      default:
+        //Take name of database using
+        std::string database_name = argv[1];
+        float min_support = argv[2];
+        vector<string> db1 = openDatabase(database_name);
+        itemsets temp;
 
-      //Output file code
-      float min_support = atof(argv[2]);
-      string output_name = database_name+"_Apriori_"+to_string(min_support)+".freq";
-      ofstream output(output_name);
+        //Output file code
+        float min_support = atof(argv[2]);
+        string output_name = database_name+"_Apriori_"+to_string(min_support)+".freq";
+        ofstream output(output_name);
 
-      float i = 0.1;
+        float i = 0.1;
 
-      apriori(db1, min_support);
+        apriori(db1, min_support);
 
-  }
-*/
+    }
+  */
 
   return 0;
 }
