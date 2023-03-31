@@ -348,5 +348,36 @@ int main()
   //  vector<string> Lk = genFreq1(test, 0.6);
   //  genCandidatesByJoin(Lk);
   //  apriori(test, 0.6);
+
+/*
+int main(int argc, char *argv[]) {
+  switch (argc) {
+    case 1:
+      //If only executeable name is given
+      cout << "Missing additional arguments" << endl;
+      break;
+    case 2:
+      //If only exe name 1 value given
+      cout << "Missing additional arguments" << endl;
+      break;
+    default:
+      //Take name of database using
+      std::string database_name = argv[1];
+      float min_support = argv[2];
+      vector<string> db1 = openDatabase(database_name);
+      itemsets temp;
+
+      //Output file code
+      float min_support = atof(argv[2]);
+      string output_name = database_name+"_Apriori_"+to_string(min_support)+".freq";
+      ofstream output(output_name);
+
+      float i = 0.1;
+
+      apriori(db1, min_support);
+
+  }
+*/
+
   return 0;
 }

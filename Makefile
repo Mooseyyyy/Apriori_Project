@@ -7,7 +7,7 @@ database : GenDatabase.o
 	$(CCC) $(CCCFLAGS) $^ -o $@
 apriori : Apriori.o
 	$(CCC) $(CCCFLAGS) $^ -o $@
-idea1 : Idea1.cc
+idea1 : Idea1.o
 	$(CCC) $(CCCFLAGS) $^ -o $@
 
 # default rule for compiling .cc to .o
@@ -18,5 +18,7 @@ clean:
 	rm -f *.o *~ *% *# .#*
 clean-apriori:
 	rm -f apriori Apriori.o
+clean-idea1:
+	rm -f idea1 Idea1.o
 clean-all: clean
-	rm -f database apriori *K.txt
+	rm -f database apriori idea1 *K.txt
