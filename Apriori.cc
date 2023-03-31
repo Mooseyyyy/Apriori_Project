@@ -154,12 +154,17 @@ vector<string> genFreq1(vector<string> db, float ms)
     }
   }
 
-  // culls itemsets that do not meet the minimum support
-  for (auto it = itemsets.cbegin(); it != itemsets.cend(); ++it)
+  //  culls itemsets that do not meet the minimum support
+  auto it = itemsets.begin();
+  while (it != itemsets.end())
   {
     if (it->second < support)
     {
-      itemsets.erase(it->first);
+      itemsets.erase(it);
+    }
+    else
+    {
+      it++;
     }
   }
 
@@ -167,7 +172,7 @@ vector<string> genFreq1(vector<string> db, float ms)
   // load frequent 1-itemsets into vector to return
   vector<string> L1;
   cout << "Frequent 1-itemsets: " << endl;
-  for (auto it = itemsets.cbegin(); it != itemsets.cend(); ++it)
+  for (auto it = itemsets.begin(); it != itemsets.end(); ++it)
   {
     cout << it->first << " | " << it->second << endl;
     L1.push_back(it->first);
@@ -233,14 +238,24 @@ vector<string> genCandidatesByJoin(vector<string> frequent_itemsets, int k)
   candidate_itemsets.erase(it, candidate_itemsets.end());
 
   // display candidate itemsets
+  /*
   cout << "Candidate " << k << "-itemsets: " << endl;
   for (auto &itemset : candidate_itemsets)
   {
     cout << itemset << endl;
   }
+  */
   return candidate_itemsets;
 }
 
+// generates a vector of strings that is a frequent k-itemset
+// from input vector Ck
+/* returns vector like this (for L3):
+i30 i34 i0
+i61 i91 i95
+...
+i99 i22 i33
+*/
 vector<string> genFreqKByPrune(vector<string> db, vector<string> candidate_itemsets, float ms, int k)
 {
   int support = ms * db.size();
@@ -248,7 +263,7 @@ vector<string> genFreqKByPrune(vector<string> db, vector<string> candidate_items
   // create itemset map
   map<string, int> frequent_itemsets;
 
-  // Debugging SCHTUFF
+  // Counting operations
   int regChecks = 1;
   int canChecks = 1;
   int traChecks = 1;
@@ -256,7 +271,6 @@ vector<string> genFreqKByPrune(vector<string> db, vector<string> candidate_items
   // iterate through vector of strings
   for (auto &transaction : db)
   {
-    traChecks++;
     // iterate through candidate itemsets
     for (auto &candidate : candidate_itemsets)
     {
@@ -267,7 +281,6 @@ vector<string> genFreqKByPrune(vector<string> db, vector<string> candidate_items
       string item;
       //  iterate through string
       //  item is the current iXX value in the candidate
-      canChecks++;
       while (iss >> item)
       {
 
@@ -283,9 +296,9 @@ vector<string> genFreqKByPrune(vector<string> db, vector<string> candidate_items
         regex findExact("\\b" + item + "\\b");
         if (!regex_search(transaction, findExact))
         {
-          regChecks++;
           founditemset = false;
         }
+        regChecks++;
       }
       if (founditemset)
       {
@@ -297,25 +310,41 @@ vector<string> genFreqKByPrune(vector<string> db, vector<string> candidate_items
           frequent_itemsets[candidate]++;
         }
       }
+      canChecks++;
     }
+    traChecks++;
   }
   cout << "Transaction Checks " << canChecks << endl;
   cout << "Candidate Checks " << canChecks << endl;
   cout << "Regex Checks " << regChecks << endl;
-  // culls itemsets that do not meet the minimum support
-  for (auto it = frequent_itemsets.cbegin(); it != frequent_itemsets.cend(); ++it)
+
+  cout << "Frequent " << k << "-itemsets Pre Cull:" << endl;
+  for (auto it = frequent_itemsets.begin(); it != frequent_itemsets.end(); ++it)
   {
+    cout << it->first << " | " << it->second << endl;
+  }
+
+  //  culls itemsets that do not meet the minimum support
+  auto it = frequent_itemsets.begin();
+  while (it != frequent_itemsets.end())
+  {
+    cout << "Pre Cull Check: " << it->first << " | " << it->second << endl;
     if (it->second < support)
     {
-      frequent_itemsets.erase(it->first);
+      frequent_itemsets.erase(it);
     }
+    else
+    {
+      it++;
+    }
+    cout << "Post Cull Check: " << it->first << " | " << it->second << endl;
   }
 
   // display frequent k-itemsets
   // load frequent k-itemsets into vector to return
   vector<string> Lk;
   cout << "Frequent " << k << "-itemsets:" << endl;
-  for (auto it = frequent_itemsets.cbegin(); it != frequent_itemsets.cend(); ++it)
+  for (auto it = frequent_itemsets.begin(); it != frequent_itemsets.end(); ++it)
   {
     cout << it->first << " | " << it->second << endl;
     Lk.push_back(it->first);

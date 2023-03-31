@@ -2,7 +2,7 @@
 CCC= g++
 CCCFLAGS = -Wall -std=c++11
 
-all : GenDatabase apriori idea1
+all : database apriori idea1
 database : GenDatabase.o
 	$(CCC) $(CCCFLAGS) $^ -o $@
 apriori : Apriori.o
