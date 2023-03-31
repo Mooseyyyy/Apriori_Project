@@ -6,6 +6,7 @@
 #include <iostream>
 #include <algorithm>
 #include <regex>
+#include <bits/stdc++.h>
 
 using namespace std;
 
@@ -269,6 +270,7 @@ vector<string> genFreqKByPrune(vector<string> db, vector<string> candidate_items
   // create itemset map
   vector<pair<string, int>> itemsets;
 
+  int tranCheck = 0;
   // iterate through vector of strings
   for (auto &transaction : db)
   {
@@ -319,6 +321,9 @@ vector<string> genFreqKByPrune(vector<string> db, vector<string> candidate_items
         }
       }
     }
+    tranCheck++;
+    // Display statistics while running
+    cout << "Round " << k << ": Checking Transaction: " << tranCheck << " / " << db.size() << endl;
   }
 
   // culls itemsets that do not meet the minimum support
@@ -353,14 +358,19 @@ void apriori(vector<string> db, float ms)
 
 int main()
 {
-  // vector<string> db1 = openDatabase("Database1K.txt");
-  //  vector<string> Lk = genFreq1(db1, 0.145);
-  //  genCandidatesByJoin(Lk, 2);
-  // apriori(db1, 0.1);
-  vector<string> test = {"i1 i2 i3 i4 i5 i6", "i2 i3 i4 i5 i6 i7", "i1 i4 i5 i8", "i1 i4 i6 i9 i10", "i2 i4 i5 i10 i11"};
-  //  vector<string> Lk = genFreq1(test, 0.6);
-  //  genCandidatesByJoin(Lk);
-  apriori(test, 0.6);
+  // Start timer
+  time_t start, end;
+  time(&start);
+  ios_base::sync_with_stdio(false);
+
+  vector<string> db1 = openDatabase("Database1K.txt");
+  //   vector<string> Lk = genFreq1(db1, 0.145);
+  //   genCandidatesByJoin(Lk, 2);
+  apriori(db1, 0.01);
+  // vector<string> test = {"i1 i2 i3 i4 i5 i6", "i2 i3 i4 i5 i6 i7", "i1 i4 i5 i8", "i1 i4 i6 i9 i10", "i2 i4 i5 i10 i11"};
+  //    vector<string> Lk = genFreq1(test, 0.6);
+  //    genCandidatesByJoin(Lk);
+  // apriori(test, 0.6);
 
   /*
   int main(int argc, char *argv[]) {
@@ -391,6 +401,14 @@ int main()
 
     }
   */
+
+  // Record end time
+  time(&end);
+  // Calculating time taken
+  double time_taken = double(end - start);
+  cout << "Execution Time: " << fixed
+       << time_taken << setprecision(5);
+  cout << "s " << endl;
 
   return 0;
 }
