@@ -4488,3 +4488,12 @@ i19 i73 | 13
 
 Scanned DB 2 times
 
+Frequent 3-itemsets:
+i15 i84 i85 | 10
+
+Scanned DB 3 times
+
+Frequent 4-itemsets:
+
+Scanned DB 4 times
+
