@@ -176,7 +176,7 @@ vector<string> genFreq1(vector<string> db, float ms)
   cout << "Frequent 1-itemsets: " << endl;
   for (int i = 0; i < itemsets.size(); i++)
   {
-    if (itemsets[i].second > support)
+    if (itemsets[i].second >= support)
     {
       cout << itemsets[i].first << " | " << itemsets[i].second << endl;
       L1.push_back(itemsets[i].first);
@@ -328,7 +328,7 @@ vector<string> genFreqKByPrune(vector<string> db, vector<string> candidate_items
   cout << "Frequent " << k << "-itemsets:" << endl;
   for (int i = 0; i < itemsets.size(); i++)
   {
-    if (itemsets[i].second > support)
+    if (itemsets[i].second >= support)
     {
       cout << itemsets[i].first << " | " << itemsets[i].second << endl;
       Lk.push_back(itemsets[i].first);
@@ -353,14 +353,14 @@ void apriori(vector<string> db, float ms)
 
 int main()
 {
-  vector<string> db1 = openDatabase("Database1K.txt");
-  // vector<string> Lk = genFreq1(db1, 0.145);
-  // genCandidatesByJoin(Lk, 2);
-  apriori(db1, 0.1);
-  //  vector<string> test = {"i1 i2 i3 i4 i5 i6", "i2 i3 i4 i5 i6 i7", "i1 i4 i5 i8", "i1 i4 i6 i9 i10", "i2 i4 i5 i10 i11"};
+  // vector<string> db1 = openDatabase("Database1K.txt");
+  //  vector<string> Lk = genFreq1(db1, 0.145);
+  //  genCandidatesByJoin(Lk, 2);
+  // apriori(db1, 0.1);
+  vector<string> test = {"i1 i2 i3 i4 i5 i6", "i2 i3 i4 i5 i6 i7", "i1 i4 i5 i8", "i1 i4 i6 i9 i10", "i2 i4 i5 i10 i11"};
   //  vector<string> Lk = genFreq1(test, 0.6);
   //  genCandidatesByJoin(Lk);
-  //  apriori(test, 0.6);
+  apriori(test, 0.6);
 
   /*
   int main(int argc, char *argv[]) {
