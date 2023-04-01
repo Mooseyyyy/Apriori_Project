@@ -17,11 +17,14 @@ i61 i91 i95 i42 i27
 ...
 i11 i22 i33 i73
 */
-vector<string> openDatabase(string dbfile)
+vector<vector<int>> openDatabase(string dbfile)
 {
   vector<string> db;
+  vector<vector<int>> db;
+  vector<int> arr;
   string line;
   ifstream fin(dbfile);
+  stringstream sline;
 
   // check file is open
   fin.is_open();
@@ -32,10 +35,24 @@ vector<string> openDatabase(string dbfile)
   }
 
   // push all lines of db to a vector of
-  while (getline(fin, line))
-  {
-    db.push_back(line);
-  }
+  while(std::getline(fin, line)) {
+           if (fin) {
+            //COnvert the fstream to sstream
+            sline << fin.rdbuf();
+           }
+           sline.str(line);
+           while (std::getline(sline, var, ' ')) {
+            //Push each item into our vector of this transaction
+              var.erase(0,1);
+              int i = stoi(var);
+              arr.push_back(i);
+           }
+           //Push the transaction into the vector
+           transactions.push_back(arr);
+           //Clear individual items from array to get next transaction
+           arr.clear();
+           sline.clear();
+        }
   return db;
 };
 
