@@ -384,8 +384,8 @@ int main()
   time(&start);
   ios_base::sync_with_stdio(false);
 
-  vector<string> test = {"i1 i2 i3 i4 i5 i6", "i2 i3 i4 i5 i6 i7", "i1 i4 i5 i8", "i1 i4 i6 i9 i10", "i2 i4 i5 i10 i11"};
-  apriori(test, 0.6);
+  vector<string> dbTest = openDatabase("DatabaseTest.txt");
+  apriori(dbTest, 0.6);
 
   // vector<string> db1 = openDatabase("Database1K.txt");
   // apriori(db1, 0.01);
