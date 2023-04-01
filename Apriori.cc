@@ -19,7 +19,6 @@ i11 i22 i33 i73
 */
 vector<vector<int>> openDatabase(string dbfile)
 {
-  vector<string> db;
   vector<vector<int>> db;
   vector<int> arr;
   string line;
