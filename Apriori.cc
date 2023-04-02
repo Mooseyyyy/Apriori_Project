@@ -10,387 +10,254 @@
 
 using namespace std;
 
-// opens database file and formats it as a vector of strings
-/* returns vector like this:
-i67 i34 i0
-i61 i91 i95 i42 i27
-...
-i11 i22 i33 i73
-*/
-vector<vector<int>> openDatabase(string dbfile)
+class Itemset
 {
-  vector<vector<int>> db;
-  vector<int> arr;
-  string line;
-  ifstream fin(dbfile);
-  stringstream sline;
-
-  // check file is open
-  fin.is_open();
-  if (!fin)
+public:
+  vector<int> transaction;
+  int frequency;
+  Itemset()
   {
-    cout << "File can not be opened" << endl;
-    exit(0);
+    frequency = 1;
   }
-
-  // push all lines of db to a vector of
-  while(std::getline(fin, line)) {
-           if (fin) {
-            //COnvert the fstream to sstream
-            sline << fin.rdbuf();
-           }
-           sline.str(line);
-           while (std::getline(sline, var, ' ')) {
-            //Push each item into our vector of this transaction
-              var.erase(0,1);
-              int i = stoi(var);
-              arr.push_back(i);
-           }
-           //Push the transaction into the vector
-           transactions.push_back(arr);
-           //Clear individual items from array to get next transaction
-           arr.clear();
-           sline.clear();
-        }
-  return db;
 };
 
-// sorts items in lexicographic order in itemset
-// takes an itemset items as a string
-// returns sorted string
-string sortItems(string items)
+vector<Itemset> openDatabase(string dbFile)
 {
-  vector<int> itemlist;
-  istringstream iss;
-  iss.str(items);
-  string item;
-  while (iss >> item)
+  vector<Itemset> transactions;
+  string line;
+  ifstream fileIn(dbFile);
+  if (fileIn.is_open())
   {
-    item.erase(0, 1);
-    int i = stoi(item);
-    itemlist.push_back(i);
-  }
-  sort(itemlist.begin(), itemlist.end());
-  string sorted;
-  int i = 0;
-  for (auto &item : itemlist)
-  {
-    if (i == 0)
+    while (getline(fileIn, line))
     {
-      sorted += "i" + to_string(item);
-      i++;
+      Itemset itemSet;
+      vector<int> items;
+      istringstream iss;
+      iss.str(line);
+      string iXX;
+      while (iss >> iXX)
+      {
+        iXX.erase(0, 1);
+        items.push_back(stoi(iXX));
+      }
+      // cout << line << endl;
+      itemSet.transaction = items;
+      transactions.push_back(itemSet);
     }
+    fileIn.close();
+  }
     else
     {
-      sorted += " i" + to_string(item);
+    cout << "File can not be opened" << endl;
+    exit(0);
     }
-  }
-  return sorted;
-}
+    return transactions;
+};
 
-// gets all unique items from a vector of strings
-// takes a vector of strings
-/*returns vector of strings like this:
-i13
-i27
-...
-i90
-*/
-vector<string> getUniqueItems(vector<string> frequent_itemsets)
+void outputItemsets(vector<Itemset> itemSet, string message, int round)
 {
-  // create itemset map
-  map<string, int> unique_items;
-
-  // iterate through vector of strings
-  for (auto &itemset : frequent_itemsets)
-  {
-    // start string stream
-    istringstream iss;
-    iss.str(itemset);
-    string item;
-
-    //  iterate through string
-    //  item is the current iXX value in the itemset
-    while (iss >> item)
+    cout << "Scanned Database " << round << " Time(s)" << endl;
+    cout << message << endl;
+    for (int i = 0; i < itemSet.size(); i++)
     {
-      // place item in map if not already in map
-      // if item already in map, increment frequency integer
-      if (!unique_items.emplace(item, 1).second)
-      {
-        unique_items[item]++;
-      }
+    for (int j = 0; j < itemSet[i].transaction.size(); j++)
+    {
+      cout << "i" << itemSet[i].transaction[j] << " ";
     }
-  }
-
-  vector<string> UI;
-  // display unique itemsets
-  // load unique itemsets into vector to return
-  // cout << "Unique Items: " << endl;
-  for (auto it = unique_items.cbegin(); it != unique_items.cend(); ++it)
-  {
-    // cout << it->first << " | " << it->second << endl;
-    UI.push_back(it->first);
-  }
-  return UI;
+    cout << "| " << itemSet[i].frequency << endl;
+    }
 }
 
-// takes database vector of strings and returns frequent
-// 1-itemsets as a vector strings
-/* returns a vector like this:
-i10
-i11
-...
-i99
- */
-vector<string> genFreq1(vector<string> db, float ms, ofstream &outFile)
+vector<Itemset> checkSupport(vector<Itemset> itemSet, int support)
+{
+    cout << "Support: " << support << endl;
+    for (int i = 0; i < itemSet.size(); i++)
+    {
+    if (itemSet[i].frequency < support)
+    {
+      itemSet.erase(itemSet.begin() + i);
+      i--;
+    }
+    }
+    return itemSet;
+}
+
+vector<Itemset> genFrequent1(vector<Itemset> db, float ms)
 {
   int support = ms * db.size();
-  cout << "Support: " << support << endl;
-
-  // create itemset map
-  vector<pair<string, int>> itemsets;
-
-  // iterate through vector of strings
-  for (auto &transaction : db)
+  vector<Itemset> L1;
+  // iterate through database
+  for (int i = 0; i < db.size(); i++)
   {
-    // start string stream
-    istringstream iss;
-    iss.str(transaction);
-    string item;
-
-    //  iterate through string
-    //  item is the current iXX value in the transaction
-    while (iss >> item)
+    // iterate through each transaction in database
+    for (int j = 0; j < db[i].transaction.size(); j++)
     {
-      // if item not already in map, place in map
-      // if item already in map, increment frequency integer
-      int indexInMap = -1;
-      for (int i = 0; i < itemsets.size(); i++)
+      int indexInItemset = -1;
+      // iterate through L1
+      for (int k = 0; k < L1.size(); k++)
       {
-        if (itemsets[i].first == item)
-        {
-          indexInMap = i;
-        }
+        // iterate through each transaction in L1
+        for (int l = 0; l < L1[k].transaction.size(); l++)
+          // if true then item already in L1
+          if (L1[k].transaction[l] == db[i].transaction[j])
+          {
+            indexInItemset = k;
+          }
       }
-      if (indexInMap == -1)
+      // if not already in itemset, place in new itemset
+      // if item already in itemset, increment frequency integer
+      if (indexInItemset == -1)
       {
-        pair<string, int> newItem;
-        newItem.first = item;
-        newItem.second = 1;
-        itemsets.push_back(newItem);
+        Itemset newItemset;
+        newItemset.transaction.push_back(db[i].transaction[j]);
+        L1.push_back(newItemset);
       }
       else
       {
-        itemsets[indexInMap].second++;
+        L1[indexInItemset].frequency++;
       }
     }
   }
+  L1 = checkSupport(L1, support);
+  outputItemsets(L1, "Frequent 1-Itemsets:", 1);
+  return L1;
+}
 
-  // culls itemsets that do not meet the minimum support
-  // displays frequent 1-itemsets and outputs to a file
-  // loads frequent 1-itemsets into vector to return
-  vector<string> L1;
-  cout << "Frequent 1-itemsets: " << endl;
-  outFile << "Frequent 1-itemsets: " << endl;
-  for (int i = 0; i < itemsets.size(); i++)
+vector<int> genUniqueItemsets(vector<Itemset> fi)
+{
+  vector<int> L1;
+  // iterate through database
+  for (int i = 0; i < fi.size(); i++)
   {
-    if (itemsets[i].second >= support)
+    // iterate through each transaction in database
+    for (int j = 0; j < fi[i].transaction.size(); j++)
     {
-      cout << itemsets[i].first << " | " << itemsets[i].second << endl;
-      outFile << itemsets[i].first << " | " << itemsets[i].second << endl;
-      L1.push_back(itemsets[i].first);
+      // if not already in itemset, place in new itemset
+      // if item already in itemset, increment frequency integer
+      int indexInItemset = -1;
+      for (int k = 0; k < L1.size(); k++)
+      {
+        if (L1[k] == fi[i].transaction[j])
+        {
+          indexInItemset = k;
+        }
+      }
+      if (indexInItemset == -1)
+      {
+        L1.push_back(fi[i].transaction[j]);
+      }
     }
   }
-  outFile << endl;
-  cout << "Scanned DB 1 time" << endl;
-  outFile << "Scanned DB 1 time" << endl;
-  outFile << endl;
   return L1;
 };
 
-// generates a vector of strings that is a candidate k-itemset
-// from input vector Lk-1
-/* returns vector like this (for C3):
-i30 i34 i0
-i61 i91 i95
-...
-i99 i22 i33
-*/
-vector<string> genCandidatesByJoin(vector<string> frequent_itemsets, int k)
+vector<Itemset> genCandidateItemsets(vector<Itemset> frequentItemsets, int round)
 {
-  // create candidate vectors
-  vector<string> candidate_itemsets;
-
-  // get unique items in frequent_itemsets
-  vector<string> unique_items = getUniqueItems(frequent_itemsets);
-
-  // iterate through frequent itemsets
-  for (auto &itemset : frequent_itemsets)
+  string outNum = to_string(round);
+  string out = "Candidate " + outNum + "-Itemsets";
+  vector<Itemset> Ck;
+  vector<Itemset> Lkp = frequentItemsets;
+  vector<int> uniqueItems = genUniqueItemsets(frequentItemsets);
+  for (int i = 0; i < Lkp.size(); i++)
   {
-    // iterate through unique items
-    for (auto &item : unique_items)
+    cout << "Round " << round << ": Finding Candidates: " << i + 1 << "/" << Lkp.size() << endl;
+    for (int k = 0; k < uniqueItems.size(); k++)
     {
-      // if unique item is not in string, find() will return string::npos
-      /*
-      if (itemset.find(item) == string::npos)
+      // unique item not found in Lkp[i].transaction
+      // create candidate transaction
+      if (find(Lkp[i].transaction.begin(), Lkp[i].transaction.end(), uniqueItems[k]) == Lkp[i].transaction.end())
       {
-        // create candidate and add to candidate_itemsets
-        // duplicates in different order will exist
-        string candidate = itemset + " " + item;
-        candidate_itemsets.push_back(candidate);
-      }
-      */
-
-      regex findExact("\\b" + item + "\\b");
-      if (!regex_search(itemset, findExact))
-      {
-        // create candidate and add to candidate_itemsets
-        // duplicates in different order will exist
-        string candidate = itemset + " " + item;
-        candidate_itemsets.push_back(candidate);
+        vector<int> trans = Lkp[i].transaction;
+        trans.push_back(uniqueItems[k]);
+        Itemset candidate;
+        candidate.transaction = trans;
+        sort(candidate.transaction.begin(), candidate.transaction.end());
+        // if candidate transaction not already in Ck, push back
+        int indexInItemset = false;
+        for (int k = 0; k < Ck.size(); k++)
+        {
+          // if true then item already in Ck
+          if (Ck[k].transaction == candidate.transaction)
+          {
+            indexInItemset = true;
+          }
+        }
+        if (!indexInItemset)
+        {
+          Ck.push_back(candidate);
+        }
       }
     }
-    // cout << endl;
   }
-
-  // sort candidate itemsets
-  for (auto &itemset : candidate_itemsets)
-  {
-    itemset = sortItems(itemset);
-  }
-
-  // delete duplicate candidate itemsets
-  std::sort(candidate_itemsets.begin(), candidate_itemsets.end());
-  auto it = std::unique(candidate_itemsets.begin(), candidate_itemsets.end());
-  candidate_itemsets.erase(it, candidate_itemsets.end());
-
-  // display candidate itemsets
-
-  cout << "Candidate " << k << "-itemsets: " << endl;
-  for (auto &itemset : candidate_itemsets)
-  {
-    cout << itemset << endl;
-  }
-
-  return candidate_itemsets;
+  // outputItemsets(Ck, out, 0);
+  return Ck;
 }
 
-// generates a vector of strings that is a frequent k-itemset
-// from input vector Ck
-/* returns vector like this (for L3):
-i30 i34 i0
-i61 i91 i95
-...
-i99 i22 i33
-*/
-vector<string> genFreqKByPrune(vector<string> db, vector<string> candidate_itemsets, float ms, int k, ofstream &outFile)
+vector<Itemset> genFrequentK(vector<Itemset> db, vector<Itemset> candidates, float ms, int round)
 {
+  string outNum = to_string(round);
+  string out = "Frequent " + outNum + "-Itemsets";
+  vector<Itemset> Lk;
   int support = ms * db.size();
-  cout << "Support: " << support << endl;
-
-  // create itemset map
-  vector<pair<string, int>> itemsets;
-
-  int tranCheck = 0;
-  // iterate through vector of strings
-  for (auto &transaction : db)
+  // iterate through database
+  for (int i = 0; i < db.size(); i++)
   {
-    // iterate through candidate itemsets
-    for (auto &candidate : candidate_itemsets)
+    cout << "Round" << round << ": Checking transaction: " << i + 1 << "/" << db.size() << endl;
+    // iterate through candidates
+    for (int j = 0; j < candidates.size(); j++)
     {
-      bool founditemset = true;
-      // start string stream
-      istringstream iss;
-      iss.str(candidate);
-      string item;
-      //  iterate through string
-      //  item is the current iXX value in the candidate
-      while (iss >> item)
+      bool foundItemset = true;
+      // iterate through candidate itemset
+      for (int k = 0; k < candidates[j].transaction.size(); k++)
       {
-        // if item is not in string
         // if this if statement never evaluates true
-        // then all stream items in the candidate string must be in itemset
-        regex findExact("\\b" + item + "\\b");
-        if (!regex_search(transaction, findExact))
+        // then all items in the candidate must be in the db transaction
+        if (find(db[i].transaction.begin(), db[i].transaction.end(), candidates[j].transaction[k]) == db[i].transaction.end())
         {
-          founditemset = false;
+          foundItemset = false;
           break;
         }
       }
-      if (founditemset)
-      {
-        // cout << candidate << " found in: " << transaction << endl;
-        // if item not already in map, place in map
-        // if item already in map, increment frequency integer
-        int indexInMap = -1;
-        for (int i = 0; i < itemsets.size(); i++)
+      if (foundItemset)
+      { //  if not already in itemset, place in new itemset
+        //  if item already in itemset, increment frequency integer
+        int indexInItemset = -1;
+        for (int k = 0; k < Lk.size(); k++)
         {
-          if (itemsets[i].first == candidate)
+          // if true then item already in Lk
+          if (Lk[k].transaction == candidates[j].transaction)
           {
-            indexInMap = i;
+            indexInItemset = k;
           }
         }
-        if (indexInMap == -1)
-        {
-          pair<string, int> newItem;
-          newItem.first = candidate;
-          newItem.second = 1;
-          itemsets.push_back(newItem);
-        }
-        else
-        {
-          itemsets[indexInMap].second++;
-        }
+          if (indexInItemset == -1)
+          {
+          Itemset newItemset;
+          newItemset.transaction = candidates[j].transaction;
+          Lk.push_back(newItemset);
+          }
+          else
+          {
+          Lk[indexInItemset].frequency++;
+          }
       }
     }
-    tranCheck++;
-    // Display statistics while running
-    cout << "Round " << k << ": Checking Transaction: " << tranCheck << " / " << db.size() << endl;
   }
-
-  // culls itemsets that do not meet the minimum support
-  // displays frequent k-itemsets and outputs to a file
-  // loads frequent k-itemsets into vector to return
-  vector<string> Lk;
-  cout << "Frequent " << k << "-itemsets:" << endl;
-  outFile << "Frequent " << k << "-itemsets:" << endl;
-  for (int i = 0; i < itemsets.size(); i++)
-  {
-    if (itemsets[i].second >= support)
-    {
-      cout << itemsets[i].first << " | " << itemsets[i].second << endl;
-      outFile << itemsets[i].first << " | " << itemsets[i].second << endl;
-      Lk.push_back(itemsets[i].first);
-    }
-  }
-  outFile << endl;
-  cout << "Scanned DB " << k << " times" << endl;
-  outFile << "Scanned DB " << k << " times" << endl;
-  outFile << endl;
+  Lk = checkSupport(Lk, support);
+  outputItemsets(Lk, out, round);
   return Lk;
 }
 
-void apriori(vector<string> db, float ms)
+void apriori(vector<Itemset> db, float ms)
 {
-  // initialize file
-  string fileSize = to_string(db.size() / 1000);
-  ofstream outFile;
-  string fileName = "D" + fileSize + "K_Apriori_1.freq";
-  outFile.open(fileName);
-  outFile << "Apriori D" << fileSize << "K" << endl;
-  outFile << endl;
-
-  // get frequent 1-itemsets
-  vector<string> Lk = genFreq1(db, ms, outFile);
+  vector<Itemset> Lk = genFrequent1(db, ms);
   int k = 1;
   while (!Lk.empty())
   {
     k++;
-    vector<string> Ck = genCandidatesByJoin(Lk, k);
-    Lk = genFreqKByPrune(db, Ck, ms, k, outFile);
+    vector<Itemset> Ck = genCandidateItemsets(Lk, k);
+    Lk = genFrequentK(db, Ck, ms, k);
   }
-
-  outFile.close();
 }
 
 int main()
@@ -400,50 +267,11 @@ int main()
   time(&start);
   ios_base::sync_with_stdio(false);
 
-  vector<string> dbTest = openDatabase("DatabaseTest.txt");
-  apriori(dbTest, 0.6);
+  // vector<Itemset> db = openDatabase("DatabaseTest.txt");
+  // apriori(db, 0.6);
 
-  // vector<string> db1 = openDatabase("Database1K.txt");
-  // apriori(db1, 0.01);
-
-  // vector<string> db10 = openDatabase("Database10K.txt");
-  // apriori(db10, 0.01);
-
-  // vector<string> db50 = openDatabase("Database50K.txt");
-  // apriori(db50, 0.01);
-
-  // vector<string> db100 = openDatabase("Database100K.txt");
-  // apriori(db100, 0.01);
-
-  /*
-  int main(int argc, char *argv[]) {
-    switch (argc) {
-      case 1:
-        //If only executeable name is given
-        cout << "Missing additional arguments" << endl;
-        break;
-      case 2:
-        //If only exe name 1 value given
-        cout << "Missing additional arguments" << endl;
-        break;
-      default:
-        //Take name of database using
-        std::string database_name = argv[1];
-        float min_support = argv[2];
-        vector<string> db1 = openDatabase(database_name);
-        itemsets temp;
-
-        //Output file code
-        float min_support = atof(argv[2]);
-        string output_name = database_name+"_Apriori_"+to_string(min_support)+".freq";
-        ofstream output(output_name);
-
-        float i = 0.1;
-
-        apriori(db1, min_support);
-
-    }
-  */
+  vector<Itemset> db = openDatabase("Database1K.txt");
+  apriori(db, 0.01);
 
   // Record end time
   time(&end);
