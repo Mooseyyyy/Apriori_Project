@@ -137,6 +137,7 @@ vector<int> genUniqueItemsets(vector<Itemset> fi)
   // iterate through database
   for (int i = 0; i < fi.size(); i++)
   {
+    cout << "Finding Unique Items: " << i + 1 << "/" << fi.size() << endl;
     // iterate through each transaction in database
     for (int j = 0; j < fi[i].transaction.size(); j++)
     {
