@@ -10,6 +10,9 @@
 
 using namespace std;
 
+std::string global_name;
+float global_supp;
+
 class Itemset
 {
 public:
@@ -54,23 +57,28 @@ vector<Itemset> openDatabase(string dbFile)
     return transactions;
 };
 
-void outputItemsets(vector<Itemset> itemSet, string message, int round)
+void outputItemsets(vector<Itemset> itemSet, string message, int round, ofstream& Database)
 {
     cout << "Scanned Database " << round << " Time(s)" << endl;
+    Database << "Scanned Database " << round << " Time(s)" << endl;
     cout << message << endl;
+    Database << message << endl;
     for (int i = 0; i < itemSet.size(); i++)
     {
     for (int j = 0; j < itemSet[i].transaction.size(); j++)
     {
       cout << "i" << itemSet[i].transaction[j] << " ";
+      Database << "i" << itemSet[i].transaction[j] << " ";
     }
     cout << "| " << itemSet[i].frequency << endl;
+    Database << "| " << itemSet[i].frequency << endl;
     }
 }
 
-vector<Itemset> checkSupport(vector<Itemset> itemSet, int support)
+vector<Itemset> checkSupport(vector<Itemset> itemSet, int support, ofstream& Database)
 {
     cout << "Support: " << support << endl;
+    Database << "Support: " << support << endl;
     for (int i = 0; i < itemSet.size(); i++)
     {
     if (itemSet[i].frequency < support)
@@ -82,7 +90,7 @@ vector<Itemset> checkSupport(vector<Itemset> itemSet, int support)
     return itemSet;
 }
 
-vector<Itemset> genFrequent1(vector<Itemset> db, float ms)
+vector<Itemset> genFrequent1(vector<Itemset> db, float ms, ofstream& Database)
 {
   int support = ms * db.size();
   vector<Itemset> L1;
@@ -118,8 +126,8 @@ vector<Itemset> genFrequent1(vector<Itemset> db, float ms)
       }
     }
   }
-  L1 = checkSupport(L1, support);
-  outputItemsets(L1, "Frequent 1-Itemsets:", 1);
+  L1 = checkSupport(L1, support, Database);
+  outputItemsets(L1, "Frequent 1-Itemsets:", 1, Database);
   return L1;
 }
 
@@ -193,7 +201,7 @@ vector<Itemset> genCandidateItemsets(vector<Itemset> frequentItemsets, int round
   return Ck;
 }
 
-vector<Itemset> genFrequentK(vector<Itemset> db, vector<Itemset> candidates, float ms, int round)
+vector<Itemset> genFrequentK(vector<Itemset> db, vector<Itemset> candidates, float ms, int round, ofstream& Database)
 {
   string outNum = to_string(round);
   string out = "Frequent " + outNum + "-Itemsets";
@@ -243,74 +251,59 @@ vector<Itemset> genFrequentK(vector<Itemset> db, vector<Itemset> candidates, flo
       }
     }
   }
-  Lk = checkSupport(Lk, support);
-  outputItemsets(Lk, out, round);
+  Lk = checkSupport(Lk, support, Database);
+  outputItemsets(Lk, out, round, Database);
   return Lk;
 }
 
-void apriori(vector<Itemset> db, float ms)
+void apriori(vector<Itemset> db, float ms, ofstream& Database)
 {
-  vector<Itemset> Lk = genFrequent1(db, ms);
+  vector<Itemset> Lk = genFrequent1(db, ms, Database);
   int k = 1;
   while (!Lk.empty())
   {
     k++;
     vector<Itemset> Ck = genCandidateItemsets(Lk, k);
-    Lk = genFrequentK(db, Ck, ms, k);
+    Lk = genFrequentK(db, Ck, ms, k, Database);
   }
 }
 
-int main()
+int main(int argc, char *argv[])
 {
   // Start timer
   time_t start, end;
   time(&start);
   ios_base::sync_with_stdio(false);
+  std::string database_name = argv[1];
+  float global_supp = atof(argv[2]);
+  global_name = database_name+"_Apriori_"+to_string(global_supp)+".freq";
+  ofstream Database(global_name);
 
-  // vector<Itemset> db = openDatabase("DatabaseTest.txt");
-  // apriori(db, 0.6);
+  switch (argc) {
+    case 1:
+      //If only executeable name is given
+      cout << "Missing additional arguments" << endl;
+      break;
+    case 2:
+      //If only exe name 1 value given
+      cout << "Missing additional arguments" << endl;
+      break;
+    default:
+      //Take name of database using
 
-  vector<Itemset> db = openDatabase("Database1K.txt");
-  apriori(db, 0.01);
+      vector<Itemset> db = openDatabase(database_name);
 
-  // vector<string> db10 = openDatabase("Database10K.txt");
-  // apriori(db10, 0.01);
-
-  // vector<string> db50 = openDatabase("Database50K.txt");
-  // apriori(db50, 0.01);
-
-  // vector<string> db100 = openDatabase("Database100K.txt");
-  // apriori(db100, 0.01);
-
-  /*
-  int main(int argc, char *argv[]) {
-    switch (argc) {
-      case 1:
-        //If only executeable name is given
-        cout << "Missing additional arguments" << endl;
-        break;
-      case 2:
-        //If only exe name 1 value given
-        cout << "Missing additional arguments" << endl;
-        break;
-      default:
-        //Take name of database using
-        std::string database_name = argv[1];
-        float min_support = argv[2];
-        vector<string> db1 = openDatabase(database_name);
-        itemsets temp;
-
-        //Output file code
-        float min_support = atof(argv[2]);
-        string output_name = database_name+"_Apriori_"+to_string(min_support)+".freq";
-        ofstream output(output_name);
-
-        float i = 0.1;
-
-        apriori(db1, min_support);
-
+      //Pops .txt off the name
+      for (int i = 0; i < 4; i++) {
+      database_name.pop_back();
     }
-  */
+
+      apriori(db, global_supp, Database);
+
+      break;
+
+  }
+
 
   // Record end time
   time(&end);
@@ -318,7 +311,11 @@ int main()
   double time_taken = double(end - start);
   cout << "Execution Time: " << fixed
        << time_taken << setprecision(5);
+  Database << "Execution Time: " << fixed
+       << time_taken << setprecision(5);
   cout << "s " << endl;
+  Database << "s " << endl;
 
+  Database.close();
   return 0;
 }
