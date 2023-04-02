@@ -276,6 +276,11 @@ int main(int argc, char *argv[])
   ios_base::sync_with_stdio(false);
   std::string database_name = argv[1];
   float global_supp = atof(argv[2]);
+  string temp_db_name=database_name;
+  //Pops .txt off the name
+  for (int i = 0; i < 4; i++) {
+  temp_db_name.pop_back();
+}
   global_name = database_name+"_Apriori_"+to_string(global_supp)+".freq";
   ofstream Database(global_name);
 
@@ -292,11 +297,6 @@ int main(int argc, char *argv[])
       //Take name of database using
 
       vector<Itemset> db = openDatabase(database_name);
-
-      //Pops .txt off the name
-      for (int i = 0; i < 4; i++) {
-      database_name.pop_back();
-    }
 
       apriori(db, global_supp, Database);
 
