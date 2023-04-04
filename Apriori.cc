@@ -1,263 +1,152 @@
-#include <string>
-#include <sstream>
-#include <fstream>
-#include <vector>
-#include <map>
 #include <iostream>
+#include <fstream>
+#include <sstream>
+#include <string>
+#include <map>
+#include <set>
 #include <algorithm>
-#include <regex>
+#include <iterator>
+#include <vector>
 #include <iomanip>
 
 using namespace std;
 
-class Itemset
-{
-public:
-  vector<int> transaction;
-  int frequency;
-  Itemset()
-  {
-    frequency = 1;
-  }
-};
+const string DATABASE_FILE = "Database1k.txt";
+const float MINIMUM_SUPPORT = 0.01;
 
-vector<Itemset> openDatabase(string dbFile)
+void readDatabase(string dbFile, map<string, set<int>> &transactions, int &num_transactions, time_t &start)
 {
-  vector<Itemset> transactions;
   string line;
   ifstream fileIn(dbFile);
   if (fileIn.is_open())
   {
+    int transaction_ID = 0;
     while (getline(fileIn, line))
     {
-      Itemset itemSet;
-      vector<int> items;
       istringstream iss;
       iss.str(line);
-      string iXX;
-      while (iss >> iXX)
+      string item;
+      while (iss >> item)
       {
-        iXX.erase(0, 1);
-        items.push_back(stoi(iXX));
+        transactions[item].emplace(transaction_ID);
       }
-      // cout << line << endl;
-      itemSet.transaction = items;
-      transactions.push_back(itemSet);
+      transaction_ID++;
     }
     fileIn.close();
+
+    num_transactions = transaction_ID;
+    cout << "Finish reading database in " << time(NULL) - start << "s" << endl;
+    cout << "Number of transactions: " << num_transactions << endl;
   }
-    else
-    {
+  else
+  {
     cout << "File can not be opened" << endl;
     exit(0);
-    }
-    return transactions;
-};
-
-void outputItemsets(vector<Itemset> itemSet, string message, int round)
-{
-    cout << "Scanned Database " << round << " Time(s)" << endl;
-    cout << message << endl;
-    for (int i = 0; i < itemSet.size(); i++)
-    {
-    for (int j = 0; j < itemSet[i].transaction.size(); j++)
-    {
-      cout << "i" << itemSet[i].transaction[j] << " ";
-    }
-    cout << "| " << itemSet[i].frequency << endl;
-    }
+  }
 }
 
-vector<Itemset> checkSupport(vector<Itemset> itemSet, int support)
+void printFrequentItemsets(const vector<map<set<string>, set<int>>> &Lk, int num_transactions)
 {
-    cout << "Support: " << support << endl;
-    for (int i = 0; i < itemSet.size(); i++)
-    {
-    if (itemSet[i].frequency < support)
-    {
-      itemSet.erase(itemSet.begin() + i);
-      i--;
-    }
-    }
-    return itemSet;
-}
-
-vector<Itemset> genFrequent1(vector<Itemset> db, float ms)
-{
-  int support = ms * db.size();
-  vector<Itemset> L1;
-  // iterate through database
-  for (int i = 0; i < db.size(); i++)
+  // Print frequent itemsets
+  for (int i = 0; i < int(Lk.size()); i++)
   {
-    // iterate through each transaction in database
-    for (int j = 0; j < db[i].transaction.size(); j++)
+    for (auto it = Lk[i].begin(); it != Lk[i].end(); it++)
     {
-      int indexInItemset = -1;
-      // iterate through L1
-      for (int k = 0; k < L1.size(); k++)
+      cout << "Frequent " << i + 1 << "-itemset: ";
+      for (auto it2 = it->first.begin(); it2 != it->first.end(); it2++)
       {
-        // iterate through each transaction in L1
-        for (int l = 0; l < L1[k].transaction.size(); l++)
-          // if true then item already in L1
-          if (L1[k].transaction[l] == db[i].transaction[j])
-          {
-            indexInItemset = k;
-          }
+        cout << *it2 << " ";
       }
-      // if not already in itemset, place in new itemset
-      // if item already in itemset, increment frequency integer
-      if (indexInItemset == -1)
-      {
-        Itemset newItemset;
-        newItemset.transaction.push_back(db[i].transaction[j]);
-        L1.push_back(newItemset);
-      }
-      else
-      {
-        L1[indexInItemset].frequency++;
-      }
+      cout << "Support: " << it->second.size() << "/" << num_transactions << endl;
     }
   }
-  L1 = checkSupport(L1, support);
-  outputItemsets(L1, "Frequent 1-Itemsets:", 1);
-  return L1;
 }
 
-vector<int> genUniqueItemsets(vector<Itemset> fi)
+void apriori(map<string, set<int>> &db, float ms, int num_transactions, time_t &start)
 {
-  vector<int> L1;
-  // iterate through database
-  for (int i = 0; i < fi.size(); i++)
+  // Contains all frequent itemsets
+  // First item in vector Lk is a map of all the frequent 1-itemsets
+  // Second item in vector Lk is a map of all the frequent 2-itemsets
+  // Third item in vector Lk is a map of all the frequent 3-itemsets
+  // etc.
+  vector<map<set<string>, set<int>>> Lk;
+  map<set<string>, set<int>> current;
+
+  // Generate frequent 1-itemsets
+  for (auto it = db.begin(); it != db.end(); it++)
   {
-    // iterate through each transaction in database
-    for (int j = 0; j < fi[i].transaction.size(); j++)
+    // If the item is frequent, add it to the map
+    if (it->second.size() >= ms * db.size())
     {
-      // if not already in itemset, place in new itemset
-      // if item already in itemset, increment frequency integer
-      int indexInItemset = -1;
-      for (int k = 0; k < L1.size(); k++)
-      {
-        if (L1[k] == fi[i].transaction[j])
-        {
-          indexInItemset = k;
-        }
-      }
-      if (indexInItemset == -1)
-      {
-        L1.push_back(fi[i].transaction[j]);
-      }
+      set<string> item;
+      item.emplace(it->first);
+      current[item] = it->second;
     }
   }
-  return L1;
-};
 
-vector<Itemset> genCandidateItemsets(vector<Itemset> frequentItemsets, int round)
-{
-  string outNum = to_string(round);
-  string out = "Candidate " + outNum + "-Itemsets";
-  vector<Itemset> Ck;
-  vector<Itemset> Lkp = frequentItemsets;
-  vector<int> uniqueItems = genUniqueItemsets(frequentItemsets);
-  for (int i = 0; i < Lkp.size(); i++)
+  // Generate frequent k-itemsets
+  int k = 2;
+  do
   {
-    cout << "Round " << round << ": Finding Candidates: " << i + 1 << "/" << Lkp.size() << endl;
-    for (int k = 0; k < uniqueItems.size(); k++)
+
+    // Add the map of frequent k-itemsets to the vector Lk
+    Lk.push_back(current);
+    current.clear();
+    cout << "Found " << Lk[k - 2].size() << " Frequent " << k - 1 << "-itemsets in " << time(NULL) - start << "s" << endl;
+
+    set<set<string>> previous_items;
+
+    for (auto it = Lk[k - 2].begin(); it != Lk[k - 2].end(); it++)
     {
-      // unique item not found in Lkp[i].transaction
-      // create candidate transaction
-      if (find(Lkp[i].transaction.begin(), Lkp[i].transaction.end(), uniqueItems[k]) == Lkp[i].transaction.end())
+      previous_items.emplace(it->first);
+    }
+
+    set<set<string>> candidates;
+    // Generate candidates
+    for (auto it = previous_items.begin(); it != previous_items.end(); it++)
+    {
+      for (auto it2 = previous_items.begin(); it2 != previous_items.end(); it2++)
       {
-        vector<int> trans = Lkp[i].transaction;
-        trans.push_back(uniqueItems[k]);
-        Itemset candidate;
-        candidate.transaction = trans;
-        sort(candidate.transaction.begin(), candidate.transaction.end());
-        // if candidate transaction not already in Ck, push back
-        int indexInItemset = false;
-        for (int k = 0; k < Ck.size(); k++)
+        if (it != it2)
         {
-          // if true then item already in Ck
-          if (Ck[k].transaction == candidate.transaction)
+          set<string> candidate;
+          set_union(it->begin(), it->end(), it2->begin(), it2->end(), inserter(candidate, candidate.begin()));
+          if (int(candidate.size()) == k)
           {
-            indexInItemset = true;
+            candidates.emplace(candidate);
           }
-        }
-        if (!indexInItemset)
-        {
-          Ck.push_back(candidate);
         }
       }
     }
-  }
-  // outputItemsets(Ck, out, 0);
-  return Ck;
-}
 
-vector<Itemset> genFrequentK(vector<Itemset> db, vector<Itemset> candidates, float ms, int round)
-{
-  string outNum = to_string(round);
-  string out = "Frequent " + outNum + "-Itemsets";
-  vector<Itemset> Lk;
-  int support = ms * db.size();
-  // iterate through database
-  for (int i = 0; i < db.size(); i++)
-  {
-    cout << "Round" << round << ": Checking transaction: " << i + 1 << "/" << db.size() << endl;
-    // iterate through candidates
-    for (int j = 0; j < candidates.size(); j++)
+    // Check if candidates are frequent
+    for (auto it = candidates.begin(); it != candidates.end(); it++)
     {
-      bool foundItemset = true;
-      // iterate through candidate itemset
-      for (int k = 0; k < candidates[j].transaction.size(); k++)
+      set<int> candidate_transactions;
+      for (auto it2 = it->begin(); it2 != it->end(); it2++)
       {
-        // if this if statement never evaluates true
-        // then all items in the candidate must be in the db transaction
-        if (find(db[i].transaction.begin(), db[i].transaction.end(), candidates[j].transaction[k]) == db[i].transaction.end())
+        if (candidate_transactions.empty())
         {
-          foundItemset = false;
-          break;
+          candidate_transactions = db[*it2];
+        }
+        else
+        {
+          set<int> temp;
+          set_intersection(candidate_transactions.begin(), candidate_transactions.end(), db[*it2].begin(), db[*it2].end(), inserter(temp, temp.begin()));
+          candidate_transactions = temp;
         }
       }
-      if (foundItemset)
-      { //  if not already in itemset, place in new itemset
-        //  if item already in itemset, increment frequency integer
-        int indexInItemset = -1;
-        for (int k = 0; k < Lk.size(); k++)
-        {
-          // if true then item already in Lk
-          if (Lk[k].transaction == candidates[j].transaction)
-          {
-            indexInItemset = k;
-          }
-        }
-          if (indexInItemset == -1)
-          {
-          Itemset newItemset;
-          newItemset.transaction = candidates[j].transaction;
-          Lk.push_back(newItemset);
-          }
-          else
-          {
-          Lk[indexInItemset].frequency++;
-          }
+      if (candidate_transactions.size() >= ms * db.size())
+      {
+        current[*it] = candidate_transactions;
       }
     }
-  }
-  Lk = checkSupport(Lk, support);
-  outputItemsets(Lk, out, round);
-  return Lk;
-}
 
-void apriori(vector<Itemset> db, float ms)
-{
-  vector<Itemset> Lk = genFrequent1(db, ms);
-  int k = 1;
-  while (!Lk.empty())
-  {
     k++;
-    vector<Itemset> Ck = genCandidateItemsets(Lk, k);
-    Lk = genFrequentK(db, Ck, ms, k);
-  }
+
+  } while (current.size() > 0);
+
+  printFrequentItemsets(Lk, num_transactions);
 }
 
 int main()
@@ -267,50 +156,10 @@ int main()
   time(&start);
   ios_base::sync_with_stdio(false);
 
-  // vector<Itemset> db = openDatabase("DatabaseTest.txt");
-  // apriori(db, 0.6);
-
-  vector<Itemset> db = openDatabase("Database1K.txt");
-  apriori(db, 0.01);
-
-  // vector<string> db10 = openDatabase("Database10K.txt");
-  // apriori(db10, 0.01);
-
-  // vector<string> db50 = openDatabase("Database50K.txt");
-  // apriori(db50, 0.01);
-
-  // vector<string> db100 = openDatabase("Database100K.txt");
-  // apriori(db100, 0.01);
-
-  /*
-  int main(int argc, char *argv[]) {
-    switch (argc) {
-      case 1:
-        //If only executeable name is given
-        cout << "Missing additional arguments" << endl;
-        break;
-      case 2:
-        //If only exe name 1 value given
-        cout << "Missing additional arguments" << endl;
-        break;
-      default:
-        //Take name of database using
-        std::string database_name = argv[1];
-        float min_support = argv[2];
-        vector<string> db1 = openDatabase(database_name);
-        itemsets temp;
-
-        //Output file code
-        float min_support = atof(argv[2]);
-        string output_name = database_name+"_Apriori_"+to_string(min_support)+".freq";
-        ofstream output(output_name);
-
-        float i = 0.1;
-
-        apriori(db1, min_support);
-
-    }
-  */
+  int num_transactions = 0;
+  map<string, set<int>> db;
+  readDatabase(DATABASE_FILE, db, num_transactions, start);
+  apriori(db, MINIMUM_SUPPORT, num_transactions, start);
 
   // Record end time
   time(&end);
