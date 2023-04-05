@@ -281,7 +281,7 @@ int main(int argc, char *argv[])
   for (int i = 0; i < 4; i++) {
   temp_db_name.pop_back();
 }
-  global_name = database_name+"_Apriori_"+to_string(global_supp)+".freq";
+  global_name = temp_db_name+"_Apriori_"+to_string(global_supp)+".freq";
   ofstream Database(global_name);
 
   switch (argc) {
