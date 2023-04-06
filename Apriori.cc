@@ -48,26 +48,34 @@ void readDatabase(map<set<string>, bitset<NUM_TRANSACTIONS>> &candidates, time_t
   }
 }
 
-void printFrequentItemsets(const map<set<string>, bitset<NUM_TRANSACTIONS>> Lk_k, const int &k, const int &start)
+void printFrequentItemsets(const map<set<string>, bitset<NUM_TRANSACTIONS>> Lk_k, const int &k, const int &start, ofstream& Database)
 {
   // Print frequent itemsets
   cout << endl;
+  Database << endl;
   cout << "Frequent " << k << "-itemsets" << endl;
+  Database << "Frequent " << k << "-itemsets" << endl;
   cout << "-----------------" << endl;
+  Database << "-----------------" << endl;
   cout << "Number of frequent " << k << "-itemsets: " << Lk_k.size() << endl;
+  Database << "Number of frequent " << k << "-itemsets: " << Lk_k.size() << endl;
   cout << "Execution time: " << time(NULL) - start << "s" << endl;
+  Database << "Execution time: " << time(NULL) - start << "s" << endl;
   cout << "-----------------" << endl;
+  Database << "-----------------" << endl;
   for (auto it = Lk_k.begin(); it != Lk_k.end(); it++)
   {
     for (auto it2 = it->first.begin(); it2 != it->first.end(); it2++)
     {
       cout << *it2 << " ";
+      Database << *it2 << " ";
     }
     cout << "Support: " << it->second.count() << "/" << NUM_TRANSACTIONS << " = " << it->second.count() / (float)NUM_TRANSACTIONS << endl;
+    Database << "Support: " << it->second.count() << "/" << NUM_TRANSACTIONS << " = " << it->second.count() / (float)NUM_TRANSACTIONS << endl;
   }
 }
 
-void apriori(map<set<string>, bitset<NUM_TRANSACTIONS>> &candidates, time_t &start)
+void apriori(map<set<string>, bitset<NUM_TRANSACTIONS>> &candidates, time_t &start, ofstream& Database)
 {
   // Vector Lk contains all frequent itemsets
   // First item in vector Lk is a map of all the frequent 1-itemsets
@@ -115,7 +123,7 @@ void apriori(map<set<string>, bitset<NUM_TRANSACTIONS>> &candidates, time_t &sta
     if (!candidates.empty())
     {
       Lk.push_back(candidates);
-      printFrequentItemsets(Lk[k - 1], k, start);
+      printFrequentItemsets(Lk[k - 1], k, start, Database);
     }
     k++;
   } while (!candidates.empty());
@@ -132,7 +140,8 @@ int main(int argc, char *argv[])
   MINIMUM_SUPPORT = atof(argv[2]);
   // string temp_db_name=;
   DATABASE_FILE = database_name;
-  // temp_db_name+"_Apriori_"+to_string(MINIMUM_SUPPORT)+".freq";
+  std::string temp_name = database_name+"_Apriori_"+to_string(MINIMUM_SUPPORT)+".freq";
+  ofstream Database(DATABASE_FILE);
 
   switch (argc)
   {
@@ -147,7 +156,7 @@ int main(int argc, char *argv[])
   default:
     map<set<string>, bitset<NUM_TRANSACTIONS>> candidates;
     readDatabase(candidates, start);
-    apriori(candidates, start);
+    apriori(candidates, start, Database);
     break;
 
 }
@@ -158,5 +167,10 @@ int main(int argc, char *argv[])
   cout << endl
        << "Time taken by program is: " << fixed
        << time_taken << setprecision(5) << "s " << endl;
+ Database << endl
+      << "Time taken by program is: " << fixed
+      << time_taken << setprecision(5) << "s " << endl;
+
+  Database.close();
   return 0;
 }
