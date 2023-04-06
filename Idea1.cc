@@ -104,10 +104,9 @@ int apriori(stack<pair<set<string>, bitset<MAX_TRANSACTIONS>>> &candidates, cons
   int transCount = 1;
   while (!candidates.empty())
   {
-    cout << "Searching for candidate: " << transCount << " / " << candidates.size() << endl;
     // Get the next candidate
     pair<set<string>, bitset<MAX_TRANSACTIONS>> candidate = candidates.top();
-    cout << "Candidate: " << *candidate.first.begin() << endl;
+    cout << "Searching for candidate: " << *candidate.first.begin() << " - " << transCount << " / " << candidates.size() << endl;
     candidates.pop();
 
     // If the candidate is frequent, add it to Lk
@@ -115,7 +114,7 @@ int apriori(stack<pair<set<string>, bitset<MAX_TRANSACTIONS>>> &candidates, cons
     {
       Lk_temp[candidate.first.size() - 1][candidate.first] = candidate.second;
       pair<set<string>, bitset<MAX_TRANSACTIONS>> big_itemset = candidate;
-      cout << "Big Itemset: " << *big_itemset.first.begin() << endl;
+      cout << "Found a frequent itemset: " << *big_itemset.first.begin() << endl;
       found_one = true;
       break;
     }
@@ -128,6 +127,7 @@ int apriori(stack<pair<set<string>, bitset<MAX_TRANSACTIONS>>> &candidates, cons
     {
       // Get the next candidate
       pair<set<string>, bitset<MAX_TRANSACTIONS>> candidate = candidates.top();
+      cout << "Searching for candidate: " << *candidate.first.begin() << " - " << transCount << " / " << candidates.size() << endl;
       candidates.pop();
 
       // If the candidate is frequent, add it to Lk
@@ -142,9 +142,11 @@ int apriori(stack<pair<set<string>, bitset<MAX_TRANSACTIONS>>> &candidates, cons
         {
           Lk_temp[combined.first.size() - 1][combined.first] = combined.second;
           big_itemset = combined;
+          cout << "Found a frequent itemset: " << *big_itemset.first.begin() << endl;
         }
       }
     }
+    cout << "Candidates size: " << candidates.size();
     while (!Lk_temp.empty())
     {
       // Largest frequent itemset is now the big_itemset
@@ -173,6 +175,7 @@ int apriori(stack<pair<set<string>, bitset<MAX_TRANSACTIONS>>> &candidates, cons
       {
         // Get the next candidate
         pair<set<string>, bitset<MAX_TRANSACTIONS>> candidate = candidates.top();
+        cout << "Searching for candidate: " << *candidate.first.begin() << " - " << transCount << " / " << candidates.size() << endl;
         candidates.pop();
 
         // If the candidate is frequent, add it to Lk
@@ -187,6 +190,7 @@ int apriori(stack<pair<set<string>, bitset<MAX_TRANSACTIONS>>> &candidates, cons
           {
             Lk_temp[combined.first.size() - 1][combined.first] = combined.second;
             big_itemset = combined;
+            cout << "Found a frequent itemset: " << *big_itemset.first.begin() << endl;
             isChanged = true;
           }
         }
@@ -194,9 +198,12 @@ int apriori(stack<pair<set<string>, bitset<MAX_TRANSACTIONS>>> &candidates, cons
       // Add: If nothing was changed about big_itemset, then the big_itemset gets added to Lk_final
       if(!isChanged){
         Lk_final[big_itemset.first.size() - 1][big_itemset.first] = big_itemset.second;
-        Lk_temp[big_itemset.first.size() - 1].erase(big_itemset.first);
       }
+      map<set<string>, bitset<MAX_TRANSACTIONS>>::iterator mapIt;
+      Lk_temp[big_itemset.first.size() - 1].erase(big_itemset.first);
+      cout << "Lk_temp size: " << Lk_temp.size() << endl;
     }
+    
 
     // Find all subsets of the frequent itemsets in Lk_final and insert them Lk_final
     for (auto it = Lk_final.rbegin(); it != Lk_final.rend(); it++)
