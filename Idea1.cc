@@ -141,7 +141,7 @@ int apriori(stack<pair<set<string>, bitset<MAX_TRANSACTIONS>>> &candidates, cons
     }
     while (!Lk_temp.empty())
     {
-      // Largest frequent itemset is now the bi_itemset
+      // Largest frequent itemset is now the big_itemset
       for (auto it = Lk_temp.rbegin(); it != Lk_temp.rend(); it++)
       {
         if (!it->empty())
@@ -150,6 +150,8 @@ int apriori(stack<pair<set<string>, bitset<MAX_TRANSACTIONS>>> &candidates, cons
           break;
         }
       }
+
+      // Insert bool = False here
 
       // Push from Lk_temp to candidates stack
       for (auto it = Lk_temp.rbegin(); it != Lk_temp.rend(); it++)
@@ -179,14 +181,16 @@ int apriori(stack<pair<set<string>, bitset<MAX_TRANSACTIONS>>> &candidates, cons
           {
             Lk_temp[combined.first.size() - 1][combined.first] = combined.second;
             big_itemset = combined;
+            // bool = True here
           }
         }
       }
-      Lk_final[big_itemset.first.size() - 1][big_itemset.first] = big_itemset.second;
-      Lk_temp[big_itemset.first.size() - 1].erase(big_itemset.first);
+      // Add: If nothing was changed about big_itemset, then the big_itemset gets added to Lk_final
+      // Lk_final[big_itemset.first.size() - 1][big_itemset.first] = big_itemset.second;
+      // Lk_temp[big_itemset.first.size() - 1].erase(big_itemset.first);
     }
 
-    // Find all subsets of the frequent itemsets in L_k and insert them Lk_final
+    // Find all subsets of the frequent itemsets in Lk_final and insert them Lk_final
     for (auto it = Lk_final.rbegin(); it != Lk_final.rend(); it++)
     {
       for (auto it2 = it->begin(); it2 != it->end(); it2++)
