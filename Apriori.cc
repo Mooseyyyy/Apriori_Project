@@ -139,15 +139,9 @@ int main(int argc, char *argv[])
 
   std::string database_name = argv[1];
   MINIMUM_SUPPORT = atof(argv[2]);
-  // string temp_db_name=;
   DATABASE_FILE = database_name;
-  unsigned first = DATABASE_FILE.find("e");
-  first++;
-  unsigned last = DATABASE_FILE.find("K");
-  string strSize = DATABASE_FILE.substr(first, last - first);
-  int size = stoi(strSize) * 1000;
   std::string temp_name = database_name + "_Apriori_" + to_string(MINIMUM_SUPPORT) + ".freq";
-  ofstream Database(DATABASE_FILE);
+  ofstream Database(temp_name);
 
   switch (argc)
   {
@@ -161,8 +155,9 @@ int main(int argc, char *argv[])
     break;
   default:
     map<set<string>, bitset<MAX_TRANSACTIONS>> candidates;
-    readDatabase(candidates, size, start);
-    apriori(candidates, size, start, Database);
+    int num_transactions = 0;
+    readDatabase(candidates, num_transactions, start);
+    apriori(candidates, num_transactions, start, Database);
     break;
   }
 
