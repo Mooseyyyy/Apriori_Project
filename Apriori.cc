@@ -130,10 +130,12 @@ int main(int argc, char *argv[])
 
   std::string database_name = argv[1];
   MINIMUM_SUPPORT = atof(argv[2]);
-  string temp_db_name=database_name;
-  DATABASE_FILE = temp_db_name+"_Apriori_"+to_string(MINIMUM_SUPPORT)+".freq";
+  // string temp_db_name=;
+  DATABASE_FILE = database_name;
+  // temp_db_name+"_Apriori_"+to_string(MINIMUM_SUPPORT)+".freq";
 
-switch (argc) {
+  switch (argc)
+  {
   case 1:
       //If only executeable name is given
     cout << "Missing additional arguments" << endl;
