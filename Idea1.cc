@@ -104,11 +104,10 @@ int apriori(stack<pair<set<string>, bitset<MAX_TRANSACTIONS>>> &candidates, cons
   int transCount = 1;
   while (!candidates.empty())
   {
-    cout << "first while:" << endl;
     cout << "Searching for candidate: " << transCount << " / " << candidates.size() << endl;
     // Get the next candidate
     pair<set<string>, bitset<MAX_TRANSACTIONS>> candidate = candidates.top();
-    
+    cout << "Candidate: " << *candidate.first.begin() << endl;
     candidates.pop();
 
     // If the candidate is frequent, add it to Lk
@@ -116,13 +115,13 @@ int apriori(stack<pair<set<string>, bitset<MAX_TRANSACTIONS>>> &candidates, cons
     {
       Lk_temp[candidate.first.size() - 1][candidate.first] = candidate.second;
       pair<set<string>, bitset<MAX_TRANSACTIONS>> big_itemset = candidate;
-
+      cout << "Big Itemset: " << *big_itemset.first.begin() << endl;
       found_one = true;
       break;
     }
+    cout << "Candidates size: " << candidates.size();
   }
-  //temporary debug print frequent itemsets
-  printFrequentItemsets(Lk_temp[k-1], k, num_transactions, start, Database);
+  
   if (found_one)
   {
     while (!candidates.empty())
@@ -254,7 +253,7 @@ int main(int argc, char *argv[])
   unsigned last = DATABASE_FILE.find(".");
   string outSize = DATABASE_FILE.substr(first, last - first);
   string outUnroundedSupport = to_string(MINIMUM_SUPPORT);
-  string outSupport = outUnroundedSupport.substr(2, 2);
+  string outSupport = outUnroundedSupport.substr(2, 3);
   string output_name = "D" + outSize + "_Idea1_" + outSupport + ".freq";
   ofstream Database(output_name);
   int scanCount;
@@ -284,7 +283,7 @@ int main(int argc, char *argv[])
   double time_taken = double(end - start);
   cout << endl
        << "The frequent itemsets are stored in " << output_name
-       << ", under ms = " << outUnroundedSupport.substr(0, 4)
+       << ", under ms = " << outUnroundedSupport.substr(0, 5)
        << "." << endl
        << "The time spent is " << fixed
        << time_taken << setprecision(5)
@@ -293,7 +292,7 @@ int main(int argc, char *argv[])
        << ", to get the frequent itemsets." << endl;
   Database << endl
            << "The frequent itemsets are stored in " << output_name
-           << ", under ms = " << outUnroundedSupport.substr(0, 4)
+           << ", under ms = " << outUnroundedSupport.substr(0, 5)
            << "." << endl
            << "The time spent is " << fixed
            << time_taken << setprecision(5)
