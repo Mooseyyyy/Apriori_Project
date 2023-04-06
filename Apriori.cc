@@ -12,11 +12,12 @@
 
 using namespace std;
 
-const string DATABASE_FILE = "Database1K.txt";
-const int NUM_TRANSACTIONS = 1000;
-const float MINIMUM_SUPPORT = 0.05;
+const int MAX_TRANSACTIONS = 100000;
 
-void readDatabase(map<set<string>, bitset<NUM_TRANSACTIONS>> &candidates, time_t &start)
+const string DATABASE_FILE = "Database1K.txt";
+const float MINIMUM_SUPPORT = 0.01;
+
+void readDatabase(map<set<string>, bitset<MAX_TRANSACTIONS>> &candidates, int &num_transactions, time_t &start)
 {
   string line;
   ifstream fileIn(DATABASE_FILE);
@@ -36,10 +37,11 @@ void readDatabase(map<set<string>, bitset<NUM_TRANSACTIONS>> &candidates, time_t
       }
       transaction_ID++;
     }
+    num_transactions = transaction_ID;
     fileIn.close();
 
     cout << "Finish reading database in " << time(NULL) - start << "s" << endl;
-    cout << "Number of transactions: " << NUM_TRANSACTIONS << endl;
+    cout << "Number of transactions: " << num_transactions << endl;
   }
   else
   {
@@ -48,7 +50,7 @@ void readDatabase(map<set<string>, bitset<NUM_TRANSACTIONS>> &candidates, time_t
   }
 }
 
-void printFrequentItemsets(const map<set<string>, bitset<NUM_TRANSACTIONS>> Lk_k, const int &k, const int &start)
+void printFrequentItemsets(const map<set<string>, bitset<MAX_TRANSACTIONS>> Lk_k, const int &k, const int &num_transactions, const int &start)
 {
   // Print frequent itemsets
   cout << endl;
@@ -63,18 +65,18 @@ void printFrequentItemsets(const map<set<string>, bitset<NUM_TRANSACTIONS>> Lk_k
     {
       cout << *it2 << " ";
     }
-    cout << "Support: " << it->second.count() << "/" << NUM_TRANSACTIONS << " = " << it->second.count() / (float)NUM_TRANSACTIONS << endl;
+    cout << "Support: " << it->second.count() << "/" << num_transactions << " = " << it->second.count() / (float)num_transactions << endl;
   }
 }
 
-void apriori(map<set<string>, bitset<NUM_TRANSACTIONS>> &candidates, time_t &start)
+void apriori(map<set<string>, bitset<MAX_TRANSACTIONS>> &candidates, const int &num_transactions, time_t &start)
 {
   // Vector Lk contains all frequent itemsets
   // First item in vector Lk is a map of all the frequent 1-itemsets
   // Second item in vector Lk is a map of all the frequent 2-itemsets
   // Third item in vector Lk is a map of all the frequent 3-itemsets
   // etc.
-  vector<map<set<string>, bitset<NUM_TRANSACTIONS>>> Lk;
+  vector<map<set<string>, bitset<MAX_TRANSACTIONS>>> Lk;
   int k = 1;
 
   do
@@ -82,7 +84,7 @@ void apriori(map<set<string>, bitset<NUM_TRANSACTIONS>> &candidates, time_t &sta
     // Generate candidates
     if (k > 1)
     {
-      map<set<string>, bitset<NUM_TRANSACTIONS>> old_candidates = candidates;
+      map<set<string>, bitset<MAX_TRANSACTIONS>> old_candidates = candidates;
       candidates.clear();
       for (auto it = old_candidates.begin(); it != old_candidates.end(); it++)
       {
@@ -101,7 +103,7 @@ void apriori(map<set<string>, bitset<NUM_TRANSACTIONS>> &candidates, time_t &sta
     // Prune candidates
     for (auto it = candidates.begin(); it != candidates.end();)
     {
-      if (it->second.count() < MINIMUM_SUPPORT * NUM_TRANSACTIONS)
+      if (it->second.count() < MINIMUM_SUPPORT * num_transactions)
       {
         it = candidates.erase(it);
       }
@@ -115,7 +117,7 @@ void apriori(map<set<string>, bitset<NUM_TRANSACTIONS>> &candidates, time_t &sta
     if (!candidates.empty())
     {
       Lk.push_back(candidates);
-      printFrequentItemsets(Lk[k - 1], k, start);
+      printFrequentItemsets(Lk[k - 1], k, num_transactions, start);
     }
     k++;
   } while (!candidates.empty());
@@ -128,9 +130,10 @@ int main()
   time(&start);
   ios_base::sync_with_stdio(false);
 
-  map<set<string>, bitset<NUM_TRANSACTIONS>> candidates;
-  readDatabase(candidates, start);
-  apriori(candidates, start);
+  map<set<string>, bitset<MAX_TRANSACTIONS>> candidates;
+  int num_transactions = 0;
+  readDatabase(candidates, num_transactions, start);
+  apriori(candidates, num_transactions, start);
 
   // Record end time
   time(&end);
