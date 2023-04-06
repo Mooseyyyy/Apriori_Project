@@ -12,7 +12,7 @@
 
 using namespace std;
 
-const string DATABASE_FILE = "Database1K.txt";
+string DATABASE_FILE;
 const int NUM_TRANSACTIONS = 1000;
 const float MINIMUM_SUPPORT = 0.05;
 
@@ -121,17 +121,38 @@ void apriori(map<set<string>, bitset<NUM_TRANSACTIONS>> &candidates, time_t &sta
   } while (!candidates.empty());
 }
 
-int main()
+int main(int argc, char *argv[])
 {
   // Start timer
   time_t start, end;
   time(&start);
   ios_base::sync_with_stdio(false);
 
-  map<set<string>, bitset<NUM_TRANSACTIONS>> candidates;
-  readDatabase(candidates, start);
-  apriori(candidates, start);
+  std::string database_name = argv[1];
+  float global_supp = atof(argv[2]);
+  string temp_db_name=database_name;
+  //Pops .txt off the name
+  for (int i = 0; i < 4; i++) {
+  temp_db_name.pop_back();
+}
+  DATABASE_FILE = temp_db_name+"_Apriori_"+to_string(global_supp)+".freq";
 
+switch (argc) {
+  case 1:
+      //If only executeable name is given
+    cout << "Missing additional arguments" << endl;
+    break;
+  case 2:
+      //If only exe name 1 value given
+    cout << "Missing additional arguments" << endl;
+    break;
+  default:
+    map<set<string>, bitset<NUM_TRANSACTIONS>> candidates;
+    readDatabase(candidates, start);
+    apriori(candidates, start);
+    break;
+
+}
   // Record end time
   time(&end);
   // Calculating time taken
