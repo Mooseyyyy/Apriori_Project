@@ -93,8 +93,11 @@ int apriori(map<set<string>, bitset<MAX_TRANSACTIONS>> &candidates, const int &n
     {
       map<set<string>, bitset<MAX_TRANSACTIONS>> old_candidates = candidates;
       candidates.clear();
+      int transCount = 0;
       for (auto it = old_candidates.begin(); it != old_candidates.end(); it++)
       {
+        transCount++;
+        cout << "Searching for candidate: " << transCount << " / " << old_candidates.size() << endl;
         for (auto it2 = next(it); it2 != old_candidates.end(); it2++)
         {
           set<string> new_itemset;
@@ -128,6 +131,7 @@ int apriori(map<set<string>, bitset<MAX_TRANSACTIONS>> &candidates, const int &n
     }
     k++;
   } while (!candidates.empty());
+  k--; // because we dont actually scan the last time when k increments at the end of the do loop
   return k;
 }
 
@@ -147,7 +151,7 @@ int main(int argc, char *argv[])
   unsigned last = DATABASE_FILE.find(".");
   string outSize = DATABASE_FILE.substr(first, last - first);
   string outUnroundedSupport = to_string(MINIMUM_SUPPORT);
-  string outSupport = outUnroundedSupport.substr(2, 2);
+  string outSupport = outUnroundedSupport.substr(2, 3);
   string output_name = "D" + outSize + "_Apriori_" + outSupport + ".freq";
   ofstream Database(output_name);
   int scanCount;
@@ -176,7 +180,7 @@ int main(int argc, char *argv[])
   double time_taken = double(end - start);
   cout << endl
        << "The frequent itemsets are stored in " << output_name
-       << ", under ms = " << outUnroundedSupport.substr(0, 4)
+       << ", under ms = " << outUnroundedSupport.substr(0, 5)
        << "." << endl
        << "The time spent is " << fixed
        << time_taken << setprecision(5)
@@ -185,7 +189,7 @@ int main(int argc, char *argv[])
        << ", to get the frequent itemsets." << endl;
   Database << endl
            << "The frequent itemsets are stored in " << output_name
-           << ", under ms = " << outUnroundedSupport.substr(0, 4)
+           << ", under ms = " << outUnroundedSupport.substr(0, 5)
            << "." << endl
            << "The time spent is " << fixed
            << time_taken << setprecision(5)
