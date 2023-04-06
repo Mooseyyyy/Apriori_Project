@@ -8,16 +8,18 @@
 #include <iterator>
 #include <vector>
 #include <iomanip>
+#include <bitset>
 
 using namespace std;
 
-const string DATABASE_FILE = "Database1k.txt";
-const float MINIMUM_SUPPORT = 0.01;
+const string DATABASE_FILE = "Database1K.txt";
+const int NUM_TRANSACTIONS = 1000;
+const float MINIMUM_SUPPORT = 0.05;
 
-void readDatabase(string dbFile, map<string, set<int>> &transactions, int &num_transactions, time_t &start)
+void readDatabase(map<set<string>, bitset<NUM_TRANSACTIONS>> &candidates, time_t &start)
 {
   string line;
-  ifstream fileIn(dbFile);
+  ifstream fileIn(DATABASE_FILE);
   if (fileIn.is_open())
   {
     int transaction_ID = 0;
@@ -28,15 +30,16 @@ void readDatabase(string dbFile, map<string, set<int>> &transactions, int &num_t
       string item;
       while (iss >> item)
       {
-        transactions[item].emplace(transaction_ID);
+        set<string> itemset;
+        itemset.emplace(item);
+        candidates[itemset].set(transaction_ID);
       }
       transaction_ID++;
     }
     fileIn.close();
 
-    num_transactions = transaction_ID;
     cout << "Finish reading database in " << time(NULL) - start << "s" << endl;
-    cout << "Number of transactions: " << num_transactions << endl;
+    cout << "Number of transactions: " << NUM_TRANSACTIONS << endl;
   }
   else
   {
@@ -45,108 +48,77 @@ void readDatabase(string dbFile, map<string, set<int>> &transactions, int &num_t
   }
 }
 
-void printFrequentItemsets(const vector<map<set<string>, set<int>>> &Lk, int num_transactions)
+void printFrequentItemsets(const map<set<string>, bitset<NUM_TRANSACTIONS>> Lk_k, const int &k, const int &start)
 {
   // Print frequent itemsets
-  for (int i = 0; i < int(Lk.size()); i++)
+  cout << endl;
+  cout << "Frequent " << k << "-itemsets" << endl;
+  cout << "-----------------" << endl;
+  cout << "Number of frequent " << k << "-itemsets: " << Lk_k.size() << endl;
+  cout << "Execution time: " << time(NULL) - start << "s" << endl;
+  cout << "-----------------" << endl;
+  for (auto it = Lk_k.begin(); it != Lk_k.end(); it++)
   {
-    for (auto it = Lk[i].begin(); it != Lk[i].end(); it++)
+    for (auto it2 = it->first.begin(); it2 != it->first.end(); it2++)
     {
-      cout << "Frequent " << i + 1 << "-itemset: ";
-      for (auto it2 = it->first.begin(); it2 != it->first.end(); it2++)
-      {
-        cout << *it2 << " ";
-      }
-      cout << "Support: " << it->second.size() << "/" << num_transactions << endl;
+      cout << *it2 << " ";
     }
+    cout << "Support: " << it->second.count() << "/" << NUM_TRANSACTIONS << " = " << it->second.count() / (float)NUM_TRANSACTIONS << endl;
   }
 }
 
-void apriori(map<string, set<int>> &db, float ms, int num_transactions, time_t &start)
+void apriori(map<set<string>, bitset<NUM_TRANSACTIONS>> &candidates, time_t &start)
 {
-  // Contains all frequent itemsets
+  // Vector Lk contains all frequent itemsets
   // First item in vector Lk is a map of all the frequent 1-itemsets
   // Second item in vector Lk is a map of all the frequent 2-itemsets
   // Third item in vector Lk is a map of all the frequent 3-itemsets
   // etc.
-  vector<map<set<string>, set<int>>> Lk;
-  map<set<string>, set<int>> current;
+  vector<map<set<string>, bitset<NUM_TRANSACTIONS>>> Lk;
+  int k = 1;
 
-  // Generate frequent 1-itemsets
-  for (auto it = db.begin(); it != db.end(); it++)
-  {
-    // If the item is frequent, add it to the map
-    if (it->second.size() >= ms * db.size())
-    {
-      set<string> item;
-      item.emplace(it->first);
-      current[item] = it->second;
-    }
-  }
-
-  // Generate frequent k-itemsets
-  int k = 2;
   do
   {
-
-    // Add the map of frequent k-itemsets to the vector Lk
-    Lk.push_back(current);
-    current.clear();
-    cout << "Found " << Lk[k - 2].size() << " Frequent " << k - 1 << "-itemsets in " << time(NULL) - start << "s" << endl;
-
-    set<set<string>> previous_items;
-
-    for (auto it = Lk[k - 2].begin(); it != Lk[k - 2].end(); it++)
-    {
-      previous_items.emplace(it->first);
-    }
-
-    set<set<string>> candidates;
     // Generate candidates
-    for (auto it = previous_items.begin(); it != previous_items.end(); it++)
+    if (k > 1)
     {
-      for (auto it2 = previous_items.begin(); it2 != previous_items.end(); it2++)
+      map<set<string>, bitset<NUM_TRANSACTIONS>> old_candidates = candidates;
+      candidates.clear();
+      for (auto it = old_candidates.begin(); it != old_candidates.end(); it++)
       {
-        if (it != it2)
+        for (auto it2 = next(it); it2 != old_candidates.end(); it2++)
         {
-          set<string> candidate;
-          set_union(it->begin(), it->end(), it2->begin(), it2->end(), inserter(candidate, candidate.begin()));
-          if (int(candidate.size()) == k)
+          set<string> new_itemset;
+          set_union(it->first.begin(), it->first.end(), it2->first.begin(), it2->first.end(), inserter(new_itemset, new_itemset.begin()));
+          if (int(new_itemset.size()) == k)
           {
-            candidates.emplace(candidate);
+            candidates[new_itemset] = it->second & it2->second;
           }
         }
       }
     }
 
-    // Check if candidates are frequent
-    for (auto it = candidates.begin(); it != candidates.end(); it++)
+    // Prune candidates
+    for (auto it = candidates.begin(); it != candidates.end();)
     {
-      set<int> candidate_transactions;
-      for (auto it2 = it->begin(); it2 != it->end(); it2++)
+      if (it->second.count() < MINIMUM_SUPPORT * NUM_TRANSACTIONS)
       {
-        if (candidate_transactions.empty())
-        {
-          candidate_transactions = db[*it2];
-        }
-        else
-        {
-          set<int> temp;
-          set_intersection(candidate_transactions.begin(), candidate_transactions.end(), db[*it2].begin(), db[*it2].end(), inserter(temp, temp.begin()));
-          candidate_transactions = temp;
-        }
+        it = candidates.erase(it);
       }
-      if (candidate_transactions.size() >= ms * db.size())
+      else
       {
-        current[*it] = candidate_transactions;
+        it++;
       }
     }
 
+    // Add candidates to Lk
+    if (!candidates.empty())
+    {
+      Lk.push_back(candidates);
+      printFrequentItemsets(Lk[k - 1], k, start);
+    }
     k++;
-
-  } while (current.size() > 0);
-
-  printFrequentItemsets(Lk, num_transactions);
+  } while (!candidates.empty());
 }
 
 int main()
@@ -156,18 +128,16 @@ int main()
   time(&start);
   ios_base::sync_with_stdio(false);
 
-  int num_transactions = 0;
-  map<string, set<int>> db;
-  readDatabase(DATABASE_FILE, db, num_transactions, start);
-  apriori(db, MINIMUM_SUPPORT, num_transactions, start);
+  map<set<string>, bitset<NUM_TRANSACTIONS>> candidates;
+  readDatabase(candidates, start);
+  apriori(candidates, start);
 
   // Record end time
   time(&end);
   // Calculating time taken
   double time_taken = double(end - start);
-  cout << "Execution Time: " << fixed
-       << time_taken << setprecision(5);
-  cout << "s " << endl;
-
+  cout << endl
+       << "Time taken by program is: " << fixed
+       << time_taken << setprecision(5) << "s " << endl;
   return 0;
 }
