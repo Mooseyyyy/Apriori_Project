@@ -1,2 +1,0 @@
-Random for transaction:
-https://stackoverflow.com/questions/8185699/how-can-i-generate-a-random-number-between-5-and-25-in-c
