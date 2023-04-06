@@ -9,6 +9,7 @@
 #include <vector>
 #include <iomanip>
 #include <bitset>
+#include <stack>
 
 using namespace std;
 
@@ -16,13 +17,14 @@ const int MAX_TRANSACTIONS = 100000;
 string DATABASE_FILE;
 float MINIMUM_SUPPORT = 0.01;
 
-void readDatabase(map<set<string>, bitset<MAX_TRANSACTIONS>> &candidates, int &num_transactions, time_t &start)
+void readDatabase(stack<pair<set<string>, bitset<MAX_TRANSACTIONS>>> &candidates, int &num_transactions, time_t &start)
 {
   string line;
   ifstream fileIn(DATABASE_FILE);
   if (fileIn.is_open())
   {
     int transaction_ID = 0;
+    map<set<string>, bitset<MAX_TRANSACTIONS>> candidates_set;
     while (getline(fileIn, line))
     {
       istringstream iss;
@@ -32,12 +34,17 @@ void readDatabase(map<set<string>, bitset<MAX_TRANSACTIONS>> &candidates, int &n
       {
         set<string> itemset;
         itemset.emplace(item);
-        candidates[itemset].set(transaction_ID);
+        candidates_set[itemset].set(transaction_ID);
       }
       transaction_ID++;
     }
     num_transactions = transaction_ID;
     fileIn.close();
+
+    for (auto it = candidates_set.begin(); it != candidates_set.end(); it++)
+    {
+      candidates.push(pair<set<string>, bitset<MAX_TRANSACTIONS>>(it->first, it->second));
+    }
 
     cout << "Finish reading database in " << time(NULL) - start << "s" << endl;
     cout << "Number of transactions: " << num_transactions << endl;
@@ -49,6 +56,7 @@ void readDatabase(map<set<string>, bitset<MAX_TRANSACTIONS>> &candidates, int &n
   }
 }
 
+/*
 void printFrequentItemsets(const map<set<string>, bitset<MAX_TRANSACTIONS>> Lk_k, const int &k, const int &num_transactions, const int &start, ofstream &Database)
 {
   // Print frequent itemsets
@@ -75,59 +83,144 @@ void printFrequentItemsets(const map<set<string>, bitset<MAX_TRANSACTIONS>> Lk_k
     Database << "Support: " << it->second.count() << "/" << num_transactions << " = " << it->second.count() / (float)num_transactions << endl;
   }
 }
+*/
 
-int apriori(map<set<string>, bitset<MAX_TRANSACTIONS>> &candidates, const int &num_transactions, time_t &start, ofstream &Database)
+int apriori(stack<pair<set<string>, bitset<MAX_TRANSACTIONS>>> &candidates, const int &num_transactions, time_t &start, ofstream &Database)
 {
   // Vector Lk contains all frequent itemsets
   // First item in vector Lk is a map of all the frequent 1-itemsets
   // Second item in vector Lk is a map of all the frequent 2-itemsets
   // Third item in vector Lk is a map of all the frequent 3-itemsets
   // etc.
-  vector<map<set<string>, bitset<MAX_TRANSACTIONS>>> Lk;
+  vector<map<set<string>, bitset<MAX_TRANSACTIONS>>> Lk_temp;
+  vector<map<set<string>, bitset<MAX_TRANSACTIONS>>> Lk_final;
+  Lk_temp.assign(100, map<set<string>, bitset<MAX_TRANSACTIONS>>());
+  Lk_final.assign(100, map<set<string>, bitset<MAX_TRANSACTIONS>>());
+  pair<set<string>, bitset<MAX_TRANSACTIONS>> big_itemset;
   int k = 1;
+  bool found_one = false;
 
-  do
+  while (!candidates.empty())
   {
-    // Generate candidates
-    if (k > 1)
+    // Get the next candidate
+    pair<set<string>, bitset<MAX_TRANSACTIONS>> candidate = candidates.top();
+    candidates.pop();
+
+    // If the candidate is frequent, add it to Lk
+    if (candidate.second.count() >= MINIMUM_SUPPORT * num_transactions)
     {
-      map<set<string>, bitset<MAX_TRANSACTIONS>> old_candidates = candidates;
-      candidates.clear();
-      for (auto it = old_candidates.begin(); it != old_candidates.end(); it++)
+      Lk_temp[candidate.first.size() - 1][candidate.first] = candidate.second;
+      pair<set<string>, bitset<MAX_TRANSACTIONS>> big_itemset = candidate;
+      found_one = true;
+      break;
+    }
+  }
+
+  if (found_one)
+  {
+    while (!candidates.empty())
+    {
+      // Get the next candidate
+      pair<set<string>, bitset<MAX_TRANSACTIONS>> candidate = candidates.top();
+      candidates.pop();
+
+      // If the candidate is frequent, add it to Lk
+      if (candidate.second.count() >= MINIMUM_SUPPORT * num_transactions)
       {
-        for (auto it2 = next(it); it2 != old_candidates.end(); it2++)
+        Lk_temp[candidate.first.size() - 1][candidate.first] = candidate.second;
+
+        pair<set<string>, bitset<MAX_TRANSACTIONS>> combined;
+        set_union(candidate.first.begin(), candidate.first.end(), big_itemset.first.begin(), big_itemset.first.end(), inserter(combined.first, combined.first.begin()));
+        combined.second = candidate.second & big_itemset.second;
+        if (combined.second.count() >= MINIMUM_SUPPORT * num_transactions)
         {
-          set<string> new_itemset;
-          set_union(it->first.begin(), it->first.end(), it2->first.begin(), it2->first.end(), inserter(new_itemset, new_itemset.begin()));
-          if (int(new_itemset.size()) == k)
+          Lk_temp[combined.first.size() - 1][combined.first] = combined.second;
+          big_itemset = combined;
+        }
+      }
+    }
+    while (!Lk_temp.empty())
+    {
+      // Largest frequent itemset is now the bi_itemset
+      for (auto it = Lk_temp.rbegin(); it != Lk_temp.rend(); it++)
+      {
+        if (!it->empty())
+        {
+          big_itemset = pair<set<string>, bitset<MAX_TRANSACTIONS>>(it->begin()->first, it->begin()->second);
+          break;
+        }
+      }
+
+      // Push from Lk_temp to candidates stack
+      for (auto it = Lk_temp.rbegin(); it != Lk_temp.rend(); it++)
+      {
+        if (!it->empty())
+        {
+          candidates.push(pair<set<string>, bitset<MAX_TRANSACTIONS>>(it->begin()->first, it->begin()->second));
+        }
+      }
+      k++;
+
+      while (!candidates.empty())
+      {
+        // Get the next candidate
+        pair<set<string>, bitset<MAX_TRANSACTIONS>> candidate = candidates.top();
+        candidates.pop();
+
+        // If the candidate is frequent, add it to Lk
+        if (candidate.second.count() >= MINIMUM_SUPPORT * num_transactions)
+        {
+          Lk_temp[candidate.first.size() - 1][candidate.first] = candidate.second;
+
+          pair<set<string>, bitset<MAX_TRANSACTIONS>> combined;
+          set_union(candidate.first.begin(), candidate.first.end(), big_itemset.first.begin(), big_itemset.first.end(), inserter(combined.first, combined.first.begin()));
+          combined.second = candidate.second & big_itemset.second;
+          if (combined.second.count() >= MINIMUM_SUPPORT * num_transactions)
           {
-            candidates[new_itemset] = it->second & it2->second;
+            Lk_temp[combined.first.size() - 1][combined.first] = combined.second;
+            big_itemset = combined;
+          }
+        }
+      }
+      Lk_final[big_itemset.first.size() - 1][big_itemset.first] = big_itemset.second;
+      Lk_temp[big_itemset.first.size() - 1].erase(big_itemset.first);
+    }
+
+    // Find all subsets of the frequent itemsets in L_k and insert them Lk_final
+    for (auto it = Lk_final.rbegin(); it != Lk_final.rend(); it++)
+    {
+      for (auto it2 = it->begin(); it2 != it->end(); it2++)
+      {
+        for (int i = 0; i < it2->first.size(); i++)
+        {
+          set<string> subset;
+          set_difference(it2->first.begin(), it2->first.end(), next(it2->first.begin(), i), next(it2->first.begin(), i + 1), inserter(subset, subset.begin()));
+          //
+          if (Lk_final[subset.size() - 1].find(subset) == Lk_final[subset.size() - 1].end())
+          {
+            Lk_final[subset.size() - 1][subset] = it2->second;
           }
         }
       }
     }
 
-    // Prune candidates
-    for (auto it = candidates.begin(); it != candidates.end();)
+    for (auto it = Lk_final.begin(); it != Lk_final.end(); it++)
     {
-      if (it->second.count() < MINIMUM_SUPPORT * num_transactions)
+      for (auto it2 = it->begin(); it2 != it->end(); it2++)
       {
-        it = candidates.erase(it);
-      }
-      else
-      {
-        it++;
+        cout << "Itemset: ";
+        Database << "Itemset: ";
+        for (auto it3 = it2->first.begin(); it3 != it2->first.end(); it3++)
+        {
+          cout << *it3 << " ";
+          Database << *it3 << " ";
+        }
+        cout << "Support: " << it2->second.count() << "/" << num_transactions << " = " << it2->second.count() / (float)num_transactions << endl;
+        Database << "Support: " << it2->second.count() << "/" << num_transactions << " = " << it2->second.count() / (float)num_transactions << endl;
       }
     }
+  }
 
-    // Add candidates to Lk
-    if (!candidates.empty())
-    {
-      Lk.push_back(candidates);
-      printFrequentItemsets(Lk[k - 1], k, num_transactions, start, Database);
-    }
-    k++;
-  } while (!candidates.empty());
   return k;
 }
 
@@ -163,7 +256,7 @@ int main(int argc, char *argv[])
     cout << "Missing additional arguments" << endl;
     break;
   default:
-    map<set<string>, bitset<MAX_TRANSACTIONS>> candidates;
+    stack<pair<set<string>, bitset<MAX_TRANSACTIONS>>> candidates;
     int num_transactions = 0;
     readDatabase(candidates, num_transactions, start);
     scanCount = apriori(candidates, num_transactions, start, Database);
