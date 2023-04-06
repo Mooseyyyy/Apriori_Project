@@ -13,8 +13,7 @@
 using namespace std;
 
 const int MAX_TRANSACTIONS = 100000;
-
-const string DATABASE_FILE = "Database1K.txt";
+string DATABASE_FILE;
 float MINIMUM_SUPPORT = 0.01;
 
 void readDatabase(map<set<string>, bitset<MAX_TRANSACTIONS>> &candidates, int &num_transactions, time_t &start)
@@ -50,7 +49,7 @@ void readDatabase(map<set<string>, bitset<MAX_TRANSACTIONS>> &candidates, int &n
   }
 }
 
-void printFrequentItemsets(const map<set<string>, bitset<MAX_TRANSACTIONS>> Lk_k, const int &k, const int &num_transactions, const int &start)
+void printFrequentItemsets(const map<set<string>, bitset<MAX_TRANSACTIONS>> Lk_k, const int &k, const int &num_transactions, const int &start, ofstream &Database)
 {
   // Print frequent itemsets
   cout << endl;
@@ -72,12 +71,12 @@ void printFrequentItemsets(const map<set<string>, bitset<MAX_TRANSACTIONS>> Lk_k
       cout << *it2 << " ";
       Database << *it2 << " ";
     }
-    cout << "Support: " << it->second.count() << "/" << num_transactions << " = " << it->second.count() / (float)NUM_TRANSACTIONS << endl;
-    Database << "Support: " << it->second.count() << "/" << num_transactions << " = " << it->second.count() / (float)NUM_TRANSACTIONS << endl;
+    cout << "Support: " << it->second.count() << "/" << num_transactions << " = " << it->second.count() / (float)num_transactions << endl;
+    Database << "Support: " << it->second.count() << "/" << num_transactions << " = " << it->second.count() / (float)num_transactions << endl;
   }
 }
 
-void apriori(map<set<string>, bitset<MAX_TRANSACTIONS>> &candidates, const int &num_transactions, time_t &start)
+void apriori(map<set<string>, bitset<MAX_TRANSACTIONS>> &candidates, const int &num_transactions, time_t &start, ofstream &Database)
 {
   // Vector Lk contains all frequent itemsets
   // First item in vector Lk is a map of all the frequent 1-itemsets
@@ -125,7 +124,7 @@ void apriori(map<set<string>, bitset<MAX_TRANSACTIONS>> &candidates, const int &
     if (!candidates.empty())
     {
       Lk.push_back(candidates);
-      printFrequentItemsets(Lk[k - 1], k, num_transactions, start);
+      printFrequentItemsets(Lk[k - 1], k, num_transactions, start, Database);
     }
     k++;
   } while (!candidates.empty());
@@ -142,6 +141,11 @@ int main(int argc, char *argv[])
   MINIMUM_SUPPORT = atof(argv[2]);
   // string temp_db_name=;
   DATABASE_FILE = database_name;
+  unsigned first = DATABASE_FILE.find("e");
+  first++;
+  unsigned last = DATABASE_FILE.find("K");
+  string strSize = DATABASE_FILE.substr(first, last - first);
+  int size = stoi(strSize) * 1000;
   std::string temp_name = database_name + "_Apriori_" + to_string(MINIMUM_SUPPORT) + ".freq";
   ofstream Database(DATABASE_FILE);
 
@@ -157,8 +161,8 @@ int main(int argc, char *argv[])
     break;
   default:
     map<set<string>, bitset<MAX_TRANSACTIONS>> candidates;
-    readDatabase(candidates, start);
-    apriori(candidates, start, Database);
+    readDatabase(candidates, size, start);
+    apriori(candidates, size, start, Database);
     break;
   }
 
