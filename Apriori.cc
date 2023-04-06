@@ -15,7 +15,7 @@ using namespace std;
 const int MAX_TRANSACTIONS = 100000;
 
 const string DATABASE_FILE = "Database1K.txt";
-const float MINIMUM_SUPPORT = 0.01;
+float MINIMUM_SUPPORT = 0.01;
 
 void readDatabase(map<set<string>, bitset<MAX_TRANSACTIONS>> &candidates, int &num_transactions, time_t &start)
 {
@@ -54,18 +54,26 @@ void printFrequentItemsets(const map<set<string>, bitset<MAX_TRANSACTIONS>> Lk_k
 {
   // Print frequent itemsets
   cout << endl;
+  Database << endl;
   cout << "Frequent " << k << "-itemsets" << endl;
+  Database << "Frequent " << k << "-itemsets" << endl;
   cout << "-----------------" << endl;
+  Database << "-----------------" << endl;
   cout << "Number of frequent " << k << "-itemsets: " << Lk_k.size() << endl;
+  Database << "Number of frequent " << k << "-itemsets: " << Lk_k.size() << endl;
   cout << "Execution time: " << time(NULL) - start << "s" << endl;
+  Database << "Execution time: " << time(NULL) - start << "s" << endl;
   cout << "-----------------" << endl;
+  Database << "-----------------" << endl;
   for (auto it = Lk_k.begin(); it != Lk_k.end(); it++)
   {
     for (auto it2 = it->first.begin(); it2 != it->first.end(); it2++)
     {
       cout << *it2 << " ";
+      Database << *it2 << " ";
     }
-    cout << "Support: " << it->second.count() << "/" << num_transactions << " = " << it->second.count() / (float)num_transactions << endl;
+    cout << "Support: " << it->second.count() << "/" << num_transactions << " = " << it->second.count() / (float)NUM_TRANSACTIONS << endl;
+    Database << "Support: " << it->second.count() << "/" << num_transactions << " = " << it->second.count() / (float)NUM_TRANSACTIONS << endl;
   }
 }
 
@@ -123,17 +131,36 @@ void apriori(map<set<string>, bitset<MAX_TRANSACTIONS>> &candidates, const int &
   } while (!candidates.empty());
 }
 
-int main()
+int main(int argc, char *argv[])
 {
   // Start timer
   time_t start, end;
   time(&start);
   ios_base::sync_with_stdio(false);
 
-  map<set<string>, bitset<MAX_TRANSACTIONS>> candidates;
-  int num_transactions = 0;
-  readDatabase(candidates, num_transactions, start);
-  apriori(candidates, num_transactions, start);
+  std::string database_name = argv[1];
+  MINIMUM_SUPPORT = atof(argv[2]);
+  // string temp_db_name=;
+  DATABASE_FILE = database_name;
+  std::string temp_name = database_name + "_Apriori_" + to_string(MINIMUM_SUPPORT) + ".freq";
+  ofstream Database(DATABASE_FILE);
+
+  switch (argc)
+  {
+  case 1:
+    // If only executeable name is given
+    cout << "Missing additional arguments" << endl;
+    break;
+  case 2:
+    // If only exe name 1 value given
+    cout << "Missing additional arguments" << endl;
+    break;
+  default:
+    map<set<string>, bitset<MAX_TRANSACTIONS>> candidates;
+    readDatabase(candidates, start);
+    apriori(candidates, start, Database);
+    break;
+  }
 
   // Record end time
   time(&end);
