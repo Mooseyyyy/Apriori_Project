@@ -14,7 +14,7 @@ using namespace std;
 
 string DATABASE_FILE;
 const int NUM_TRANSACTIONS = 1000;
-const float MINIMUM_SUPPORT = 0.05;
+float MINIMUM_SUPPORT;
 
 void readDatabase(map<set<string>, bitset<NUM_TRANSACTIONS>> &candidates, time_t &start)
 {
@@ -129,13 +129,9 @@ int main(int argc, char *argv[])
   ios_base::sync_with_stdio(false);
 
   std::string database_name = argv[1];
-  float global_supp = atof(argv[2]);
+  MINIMUM_SUPPORT = atof(argv[2]);
   string temp_db_name=database_name;
-  //Pops .txt off the name
-  for (int i = 0; i < 4; i++) {
-  temp_db_name.pop_back();
-}
-  DATABASE_FILE = temp_db_name+"_Apriori_"+to_string(global_supp)+".freq";
+  DATABASE_FILE = temp_db_name+"_Apriori_"+to_string(MINIMUM_SUPPORT)+".freq";
 
 switch (argc) {
   case 1:
