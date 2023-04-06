@@ -23,7 +23,15 @@ std::string GenTransaction(int num, std::vector<std::string>& items) {
 
   for (int i=0; i<num; i++) {
     int randomNum = rand() % 100;
-    trans = trans + items[randomNum] + " ";
+    std::string item = items[randomNum];
+    if (trans.find(item) == std::string::npos)
+    {
+      trans = trans + item + " ";
+    }
+    else
+    {
+      i--;
+    }
   }
   return trans;
 }
