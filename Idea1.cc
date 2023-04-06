@@ -241,7 +241,7 @@ int main(int argc, char *argv[])
   string outSize = DATABASE_FILE.substr(first, last - first);
   string outUnroundedSupport = to_string(MINIMUM_SUPPORT);
   string outSupport = outUnroundedSupport.substr(2, 2);
-  string output_name = "D" + outSize + "_Apriori_" + outSupport + ".freq";
+  string output_name = "D" + outSize + "_Idea1_" + outSupport + ".freq";
   ofstream Database(output_name);
   int scanCount;
 
