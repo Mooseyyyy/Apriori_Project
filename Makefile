@@ -21,4 +21,4 @@ clean-apriori:
 clean-idea1:
 	rm -f idea1 Idea1.o
 clean-all: clean
-	rm -f database apriori idea1 *K.txt
+	rm -f database apriori idea1 *K.txt *.freq
