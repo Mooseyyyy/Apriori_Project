@@ -76,7 +76,7 @@ void printFrequentItemsets(const map<set<string>, bitset<MAX_TRANSACTIONS>> Lk_k
   }
 }
 
-void apriori(map<set<string>, bitset<MAX_TRANSACTIONS>> &candidates, const int &num_transactions, time_t &start, ofstream &Database)
+int apriori(map<set<string>, bitset<MAX_TRANSACTIONS>> &candidates, const int &num_transactions, time_t &start, ofstream &Database)
 {
   // Vector Lk contains all frequent itemsets
   // First item in vector Lk is a map of all the frequent 1-itemsets
@@ -128,6 +128,7 @@ void apriori(map<set<string>, bitset<MAX_TRANSACTIONS>> &candidates, const int &
     }
     k++;
   } while (!candidates.empty());
+  return k;
 }
 
 int main(int argc, char *argv[])
@@ -137,11 +138,19 @@ int main(int argc, char *argv[])
   time(&start);
   ios_base::sync_with_stdio(false);
 
-  std::string database_name = argv[1];
+  DATABASE_FILE = argv[1];
   MINIMUM_SUPPORT = atof(argv[2]);
-  DATABASE_FILE = database_name;
-  std::string temp_name = database_name + "_Apriori_" + to_string(MINIMUM_SUPPORT) + ".freq";
-  ofstream Database(temp_name);
+
+  // setup for output filename
+  unsigned first = DATABASE_FILE.find("e");
+  first++;
+  unsigned last = DATABASE_FILE.find(".");
+  string outSize = DATABASE_FILE.substr(first, last - first);
+  string outUnroundedSupport = to_string(MINIMUM_SUPPORT);
+  string outSupport = outUnroundedSupport.substr(2, 2);
+  string output_name = "D" + outSize + "_Apriori_" + outSupport + ".freq";
+  ofstream Database(output_name);
+  int scanCount;
 
   switch (argc)
   {
@@ -157,7 +166,7 @@ int main(int argc, char *argv[])
     map<set<string>, bitset<MAX_TRANSACTIONS>> candidates;
     int num_transactions = 0;
     readDatabase(candidates, num_transactions, start);
-    apriori(candidates, num_transactions, start, Database);
+    scanCount = apriori(candidates, num_transactions, start, Database);
     break;
   }
 
@@ -166,7 +175,22 @@ int main(int argc, char *argv[])
   // Calculating time taken
   double time_taken = double(end - start);
   cout << endl
-       << "Time taken by program is: " << fixed
-       << time_taken << setprecision(5) << "s " << endl;
+       << "The frequent itemsets are stored in " << output_name
+       << ", under ms = " << outUnroundedSupport.substr(0, 4)
+       << "." << endl
+       << "The time spent is " << fixed
+       << time_taken << setprecision(5)
+       << "s, to get the frequent itemsets." << endl
+       << "The number of times scanning the database is " << scanCount
+       << ", to get the frequent itemsets." << endl;
+  Database << endl
+           << "The frequent itemsets are stored in " << output_name
+           << ", under ms = " << outUnroundedSupport.substr(0, 4)
+           << "." << endl
+           << "The time spent is " << fixed
+           << time_taken << setprecision(5)
+           << "s, to get the frequent itemsets." << endl
+           << "The number of times scanning the database is " << scanCount
+           << ", to get the frequent itemsets." << endl;
   return 0;
 }

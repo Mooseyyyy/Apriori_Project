@@ -2,7 +2,7 @@
 Frequent 1-itemsets
 -----------------
 Number of frequent 1-itemsets: 6
-Execution time: 0s
+Execution time: 1s
 -----------------
 i25 Support: 150/1000 = 0.15
 i28 Support: 151/1000 = 0.151
@@ -10,3 +10,7 @@ i52 Support: 161/1000 = 0.161
 i70 Support: 151/1000 = 0.151
 i90 Support: 156/1000 = 0.156
 i93 Support: 154/1000 = 0.154
+
+The frequent itemsets are stored in D1K_Apriori_15.freq, under ms = 0.15.
+The time spent is 1.000000s, to get the frequent itemsets.
+The number of times scanning the database is 3, to get the frequent itemsets.
